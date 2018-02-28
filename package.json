@@ -1,0 +1,18 @@
+{
+  "name": "oauth2-window-dot-open",
+  "version": "0.0.0",
+  "description": "A very simple oauth2 implicit flow library that uses window.open.",
+  "main": "dist/oauth2-window-dot-open.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack -p"
+  },
+  "author": "Rico Kahler",
+  "license": "MIT",
+  "devDependencies": {
+    "awesome-typescript-loader": "^3.5.0",
+    "typescript": "^2.7.2",
+    "webpack": "^4.0.1",
+    "webpack-cli": "^2.0.9"
+  }
+}
