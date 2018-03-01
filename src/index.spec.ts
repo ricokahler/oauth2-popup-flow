@@ -4,6 +4,23 @@ interface ExampleTokenPayload {
   exp: number,
 }
 
+function createTestStorage() {
+  const _storage: { [key: string]: string | undefined | null } = {};
+  return {
+    clear: () => {
+      for (const key of Object.keys(_storage)) {
+        delete _storage[key];
+      }
+    },
+    getItem: (key: string) => _storage[key] || null,
+    key: (index: number) => Object.keys(_storage)[index] || null,
+    length: Object.keys(_storage).length,
+    removeItem: (key: string) => { delete _storage[key]; },
+    setItem: (key: string, value: string) => { _storage[key] = value; },
+    _storage,
+  };
+}
+
 describe('OAuth2PopupFlow', () => {
   describe('jsonParseOrUndefined', () => {
     it('returns parsed JSON when valid', () => {
@@ -330,6 +347,66 @@ describe('OAuth2PopupFlow', () => {
       expect(auth.scope).toBe(options.scope);
       expect(auth.storage).toBe(storage);
       expect(auth.tokenValidator).toBe(tokenValidator);
+    });
+  });
+
+  describe('_rawToken', () => {
+    it('gets the raw token from storage', () => {
+      const storage = createTestStorage();
+
+      const auth = new OAuth2PopupFlow({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      storage._storage.token = 'test_token';
+
+      expect(auth['_rawToken']).toBe('test_token');
+    });
+    it('returns `undefined` if the value in storage is falsy', () => {
+      const storage = createTestStorage();
+
+      const auth = new OAuth2PopupFlow({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      storage._storage.token = '';
+      expect(auth['_rawToken']).toBeUndefined();
+
+      storage._storage.token = null;
+      expect(auth['_rawToken']).toBeUndefined();
+    });
+    it('doesn\'t allow `null` or `undefined` to be assigned to storage but allows strings', () => {
+      const storage = createTestStorage();
+
+      const auth = new OAuth2PopupFlow({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      storage._storage.token = 'initial value';
+
+      auth['_rawToken'] = undefined;
+      expect(storage._storage.token).toBe('initial value');
+
+      (auth as any)['_rawToken'] = null;
+      expect(storage._storage.token).toBe('initial value');
+
+      auth['_rawToken'] = '';
+      expect(storage._storage.token).toBe('');
+
+      auth['_rawToken'] = 'something';
+      expect(storage._storage.token).toBe('something');
     });
   });
 });
