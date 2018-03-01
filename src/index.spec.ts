@@ -292,5 +292,44 @@ describe('OAuth2PopupFlow', () => {
       expect(auth.storage).toBe(storage);
       expect(auth.tokenValidator).toBe(tokenValidator);
     });
+    it('uses the default `additionalAuthorizationParameters` of `{}` when none is present', () => {
+      function beforePopup() { }
+      function tokenValidator(options: { token: string, payload: ExampleTokenPayload }) {
+        return true;
+      }
+
+      const storage = {} as Storage;
+
+      const options = {
+        accessTokenResponseKey: 'test_response_key',
+        accessTokenStorageKey: 'test_storage_key',
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        beforePopup,
+        clientId: 'test_client_id',
+        pollingTime: Math.random(),
+        redirectUri: 'http://localhost:8080/redirect',
+        responseType: 'test_token',
+        scope: 'test scope',
+        storage,
+        tokenValidator,
+      };
+
+      const auth = new OAuth2PopupFlow(options);
+
+      expect(auth.additionalAuthorizationParameters).toEqual({});
+
+      // copied from other tests
+      expect(auth.accessTokenResponseKey).toBe(options.accessTokenResponseKey);
+      expect(auth.accessTokenStorageKey).toBe(options.accessTokenStorageKey);
+      expect(auth.authorizationUrl).toBe(options.authorizationUrl);
+      expect(auth.beforePopup).toBe(beforePopup);
+      expect(auth.clientId).toBe(options.clientId);
+      expect(auth.pollingTime).toBe(options.pollingTime);
+      expect(auth.redirectUri).toBe(options.redirectUri);
+      expect(auth.responseType).toBe(options.responseType);
+      expect(auth.scope).toBe(options.scope);
+      expect(auth.storage).toBe(storage);
+      expect(auth.tokenValidator).toBe(tokenValidator);
+    });
   });
 });
