@@ -10,6 +10,7 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
   pollingTime?: number,
   additionalAuthorizationParameters?: { [key: string]: string },
   tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean,
+  beforePopup?: () => void | Promise<void>,
 }
 
 export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
@@ -24,6 +25,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   pollingTime: number;
   additionalAuthorizationParameters: { [key: string]: string };
   tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean;
+  beforePopup?: () => void | Promise<void>;
 
   constructor(options: OAuth2PopupFlowOptions<TokenPayload>) {
     this.authorizationUrl = options.authorizationUrl;
@@ -37,6 +39,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     this.pollingTime = options.pollingTime || 200;
     this.additionalAuthorizationParameters = options.additionalAuthorizationParameters || {};
     this.tokenValidator = options.tokenValidator;
+    this.beforePopup = options.beforePopup;
   }
 
   private get _rawToken() {
@@ -65,6 +68,10 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
 
   async tryLoginPopup() {
     if (this.loggedIn()) { return true; }
+
+    if (this.beforePopup) {
+      await Promise.resolve(this.beforePopup());
+    }
 
     const popup = open(`${this.authorizationUrl}?${OAuth2PopupFlow.encodeObjectToUri({
       client_id: this.clientId,
