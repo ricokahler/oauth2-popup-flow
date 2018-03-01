@@ -1,0 +1,79 @@
+:host {
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+}
+
+.modal-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 102;
+}
+
+.modal {
+  background-color: white;
+  padding: 1rem;
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 100vw;
+  width: 30rem;
+}
+
+.spinner { margin-bottom: 1rem; }
+.header {
+  margin-bottom: 1rem;
+  font-size: 2.618rem;
+  font-weight: 500;
+}
+.message {
+  font-size: 1.618rem;
+  margin-bottom: 1rem;
+}
+.sub-message {
+}
+
+.retry-login {
+  color: blue;
+  cursor: pointer;
+}
+.retry-login:hover {
+  text-decoration: underline;
+}
+
+.background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  opacity: 0.1;
+  z-index: 101;
+}
+
+.login-button {
+  border: 0.1rem solid lightgray;
+  padding: 0.618rem;
+  margin-bottom: 1rem;
+  color: black;
+  outline: none;
+}
+
+.login-button:hover {
+  border: 0.1rem solid gray;
+}
+.login-botton:active {
+  border: 0.1rem solid black;
+}
