@@ -66,6 +66,43 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     return decodedPayload;
   }
 
+  loggedIn() {
+    const decodedPayload = this._rawTokenPayload;
+    if (!decodedPayload) { return false; }
+
+    if (this.tokenValidator) {
+      const token = this._rawToken!;
+      if (!this.tokenValidator({ payload: decodedPayload, token })) { return false; }
+    }
+
+    const exp = decodedPayload.exp;
+    if (!exp) { return false; }
+
+    if (new Date().getTime() > exp * 1000) { return false; }
+
+    return true;
+  }
+
+  logout() {
+    this.storage.removeItem(this.accessTokenStorageKey);
+  }
+
+  handleRedirect() {
+    const locationHref = location.href;
+    if (!locationHref.startsWith(this.redirectUri)) { return false; }
+    const rawHash = location.hash;
+    if (!rawHash) { return false; }
+    const hashMatch = /#(.*)/.exec(rawHash);
+    if (!hashMatch) { return false; }
+    const hash = hashMatch[1];
+
+    const authorizationResponse = OAuth2PopupFlow.decodeUriToObject(hash);
+    const rawToken = authorizationResponse[this.accessTokenResponseKey];
+    if (!rawToken) { return false; }
+    this._rawToken = rawToken;
+    return true;
+  }
+
   async tryLoginPopup() {
     if (this.loggedIn()) { return true; }
 
@@ -85,44 +122,6 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     await this.authenticated();
 
     popup.close();
-    return true;
-  }
-
-  logout() {
-    this.storage.removeItem(this.accessTokenStorageKey);
-  }
-
-  loggedIn() {
-    const decodedPayload = this._rawTokenPayload;
-    if (!decodedPayload) { return false; }
-
-    if (this.tokenValidator) {
-      const token = this._rawToken;
-      if (!token) { throw new Error('Token was falsy but token payload was not.'); }
-      if (!this.tokenValidator({ payload: decodedPayload, token })) { return false; }
-    }
-
-    const exp = decodedPayload.exp;
-    if (!exp) { return false; }
-
-    if (new Date().getTime() > exp * 1000) { return false; }
-
-    return true;
-  }
-
-  handleRedirect() {
-    const locationHref = location.href;
-    if (!locationHref.startsWith(this.redirectUri)) { return false; }
-    const rawHash = location.hash;
-    if (!rawHash) { return false; }
-    const hashMatch = /#(.*)/.exec(rawHash);
-    if (!hashMatch) { return false; }
-    const hash = hashMatch[1];
-
-    const authorizationResponse = OAuth2PopupFlow.decodeUriToObject(hash);
-    const rawToken = authorizationResponse[this.accessTokenResponseKey];
-    if (!rawToken) { return false; }
-    this._rawToken = rawToken;
     return true;
   }
 

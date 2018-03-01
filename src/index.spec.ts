@@ -480,7 +480,7 @@ describe('OAuth2PopupFlow', () => {
       const examplePayload = {
         foo: 'something',
         bar: 5,
-        exp: Math.floor(new Date().getTime() / 1000)
+        exp: Math.floor(new Date().getTime() / 1000),
       };
 
       storage._storage.token = [
@@ -490,6 +490,129 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
 
       expect(auth['_rawTokenPayload']).toEqual(examplePayload);
+    });
+  });
+
+  describe('loggedIn', () => {
+    it('returns `false` if the `_rawTokenPayload` is undefined', () => {
+      const storage = createTestStorage();
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      storage._storage.token = undefined;
+
+      expect(auth.loggedIn()).toBe(false);
+    });
+    it('returns `false` if there is a `tokenValidator` and that returns false', () => {
+      const storage = createTestStorage();
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000),
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      let tokenValidatorCalled = false;
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+        tokenValidator: ({ token, payload }) => {
+          expect(token).toBe(exampleToken);
+          expect(payload).toEqual(examplePayload);
+          tokenValidatorCalled = true;
+          return false;
+        },
+      });
+
+      expect(auth.loggedIn()).toBe(false);
+      expect(tokenValidatorCalled).toBe(true);
+    });
+    it('returns `false` if the `exp` in the payload is falsy', () => {
+      const storage = createTestStorage();
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: 0,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      expect(auth.loggedIn()).toBe(false);
+    });
+    it('returns `false` if the token is expired', () => {
+      const storage = createTestStorage();
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) - 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      expect(auth.loggedIn()).toBe(false);
+    });
+    it('returns `true` if the token is good', () => {
+      const storage = createTestStorage();
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) + 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      expect(auth.loggedIn()).toBe(true);
     });
   });
 });
