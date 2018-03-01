@@ -1,8 +1,8 @@
 <ng-container *ngIf="!auth.loggedIn()">
   <div class="modal-container">
     <div class="modal">
-      <div class="header">Whoa there!</div>
-      <div class="message">You're not logged in yet.</div>
+      <div class="header">You're not logged in yet!</div>
+      <div class="message">Let's fix that.</div>
       <button class="login-button" (click)="onRetryClick()">Click here to login!</button>
       <div class="sub-message">
         This message should automatically go away after we've made sure you're in. If your popup

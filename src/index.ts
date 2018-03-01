@@ -10,7 +10,7 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
   pollingTime?: number,
   additionalAuthorizationParameters?: { [key: string]: string },
   tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean,
-  beforePopup?: () => void | Promise<void>,
+  beforePopup?: () => any | Promise<any>,
 }
 
 export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
@@ -25,7 +25,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   pollingTime: number;
   additionalAuthorizationParameters: { [key: string]: string };
   tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean;
-  beforePopup?: () => void | Promise<void>;
+  beforePopup?: () => any | Promise<any>;
 
   constructor(options: OAuth2PopupFlowOptions<TokenPayload>) {
     this.authorizationUrl = options.authorizationUrl;

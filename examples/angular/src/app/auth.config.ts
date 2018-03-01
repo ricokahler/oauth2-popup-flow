@@ -17,6 +17,10 @@ export interface TokenPayload {
   nonce: string,
 }
 
+function time(milliseconds: number) {
+  return new Promise<'TIMER'>(resolve => setTimeout(() => resolve('TIMER'), milliseconds));
+}
+
 export const auth = new OAuth2PopupFlow<TokenPayload>({
   // you would get this values from `environment.ts` in real use.
   authorizationUrl: 'https://formandfocus.auth0.com/authorize',
@@ -28,4 +32,5 @@ export const auth = new OAuth2PopupFlow<TokenPayload>({
   additionalAuthorizationParameters: {
     nonce: Math.random().toString(),
   },
+  beforePopup: () => time(1000),
 });
