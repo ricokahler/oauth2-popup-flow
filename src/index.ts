@@ -8,6 +8,7 @@ export interface OAuth2WindowDotOpenOptions {
   accessTokenResponseKey?: string,
   storage?: Storage,
   pollingTime?: number,
+  additionalAuthorizationParameters?: { [key: string]: string },
 }
 
 export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
@@ -20,6 +21,7 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
   accessTokenResponseKey: string;
   storage: Storage;
   pollingTime: number;
+  additionalAuthorizationParameters: { [key: string]: string };
 
   constructor(options: OAuth2WindowDotOpenOptions) {
     this.authorizationUrl = options.authorizationUrl;
@@ -31,6 +33,7 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
     this.accessTokenResponseKey = options.accessTokenResponseKey || 'access_token';
     this.storage = options.storage || localStorage;
     this.pollingTime = options.pollingTime || 200;
+    this.additionalAuthorizationParameters = options.additionalAuthorizationParameters || {};
   }
 
   private get _rawToken() {
@@ -57,7 +60,7 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
     return decodedPayload;
   }
 
-  tryLoginPopup() {
+  async tryLoginPopup() {
     if (this.loggedIn()) { return true; }
 
     const popup = open(`${this.authorizationUrl}?${OAuth2WindowDotOpen.encodeObjectToUri({
@@ -65,11 +68,18 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
       response_type: this.responseType,
       redirect_uri: this.redirectUri,
       scope: this.scope,
+      ...this.additionalAuthorizationParameters,
     })}`);
     if (!popup) { return false; }
 
+    await this.authenticated();
+
     popup.close();
     return true;
+  }
+
+  logout() {
+    this.storage.removeItem(this.accessTokenStorageKey);
   }
 
   loggedIn() {

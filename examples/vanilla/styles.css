@@ -1,0 +1,45 @@
+* {
+  font-family: sans-serif;
+  color: peachpuff;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  min-width: 100vw;
+
+  font-size: 2.618rem;
+  font-weight: 500;
+  background-color: palevioletred;
+}
+
+.sub {
+  font-size: 1rem;
+  margin: 1rem;
+}
+
+button {
+  background-color: transparent;
+  border: 0.1rem solid peachpuff;
+  font-size: 1.618rem;
+  padding: 1rem;
+  margin: 1rem;
+  outline: none;
+}
+
+button:hover {
+  background-color: peachpuff;
+  color: palevioletred;
+}
+
+button:active {
+  background-color: papayawhip;
+}
