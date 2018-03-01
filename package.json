@@ -1,6 +1,6 @@
 {
   "name": "oauth2-popup-flow",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A very simple oauth2 implicit flow library that uses window.open.",
   "main": "./dist/oauth2-popup-flow.js",
   "typings": "./src/index.ts",
@@ -10,6 +10,10 @@
   },
   "author": "Rico Kahler",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ricokahler/oauth2-popup-flow.git"
+  },
   "devDependencies": {
     "@types/jasmine": "^2.8.6",
     "awesome-typescript-loader": "^3.5.0",
