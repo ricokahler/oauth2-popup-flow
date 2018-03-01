@@ -59,7 +59,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     const encodedPayload = tokenSplit[1];
     if (!encodedPayload) { return undefined; }
 
-    const decodedPayloadJson = atob(encodedPayload);
+    const decodedPayloadJson = window.atob(encodedPayload);
     const decodedPayload = OAuth2PopupFlow.jsonParseOrUndefined<TokenPayload>(
       decodedPayloadJson
     );

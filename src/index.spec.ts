@@ -2,6 +2,8 @@ import { OAuth2PopupFlow, OAuth2PopupFlowOptions } from './';
 
 interface ExampleTokenPayload {
   exp: number,
+  foo: string,
+  bar: number,
 }
 
 function createTestStorage() {
@@ -407,6 +409,87 @@ describe('OAuth2PopupFlow', () => {
 
       auth['_rawToken'] = 'something';
       expect(storage._storage.token).toBe('something');
+    });
+  });
+
+  describe('_rawTokenPayload', () => {
+    it('returns `undefined` if the `_rawToken` is falsy', () => {
+      const storage = createTestStorage();
+
+      const auth = new OAuth2PopupFlow({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      storage._storage.token = undefined;
+      expect(auth['_rawTokenPayload']).toBeUndefined();
+
+      storage._storage.token = null;
+      expect(auth['_rawTokenPayload']).toBeUndefined();
+
+      storage._storage.token = '';
+      expect(auth['_rawTokenPayload']).toBeUndefined();
+    });
+    it('returns `undefined` if it couldn\'t find the encoded payload in the token', () => {
+      const storage = createTestStorage();
+
+      const auth = new OAuth2PopupFlow({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      storage._storage.token = 'non-proper JWT';
+      expect(auth['_rawTokenPayload']).toBeUndefined();
+    });
+    it('returns `undefined` if it couldn\'t parse the JSON in the encoded payload', () => {
+      const storage = createTestStorage();
+
+      const auth = new OAuth2PopupFlow({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      storage._storage.token = [
+        'non proper JWT',
+        'this is the payload section',
+        'this is the signature section'
+      ].join('.');
+
+      expect(auth['_rawTokenPayload']).toBeUndefined();
+    });
+    it('returns a proper decoded payload', () => {
+      const storage = createTestStorage();
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000)
+      };
+
+      storage._storage.token = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+
+      expect(auth['_rawTokenPayload']).toEqual(examplePayload);
     });
   });
 });
