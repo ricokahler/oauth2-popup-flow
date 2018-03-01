@@ -4,8 +4,8 @@ module.exports = {
   entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'oauth2-window-dot-open.js',
-    library: 'OAuth2WindowDotOpen',
+    filename: 'oauth2-popup-flow.js',
+    library: 'OAuth2PopupFlow',
     libraryTarget: 'umd',
   },
   module: {

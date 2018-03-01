@@ -1,4 +1,4 @@
-export interface OAuth2WindowDotOpenOptions {
+export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
   authorizationUrl: string,
   clientId: string,
   redirectUri: string,
@@ -9,9 +9,10 @@ export interface OAuth2WindowDotOpenOptions {
   storage?: Storage,
   pollingTime?: number,
   additionalAuthorizationParameters?: { [key: string]: string },
+  tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean,
 }
 
-export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
+export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   authorizationUrl: string;
   clientId: string;
   redirectUri: string;
@@ -22,8 +23,9 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
   storage: Storage;
   pollingTime: number;
   additionalAuthorizationParameters: { [key: string]: string };
+  tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean;
 
-  constructor(options: OAuth2WindowDotOpenOptions) {
+  constructor(options: OAuth2PopupFlowOptions<TokenPayload>) {
     this.authorizationUrl = options.authorizationUrl;
     this.clientId = options.clientId;
     this.redirectUri = options.redirectUri;
@@ -34,6 +36,7 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
     this.storage = options.storage || localStorage;
     this.pollingTime = options.pollingTime || 200;
     this.additionalAuthorizationParameters = options.additionalAuthorizationParameters || {};
+    this.tokenValidator = options.tokenValidator;
   }
 
   private get _rawToken() {
@@ -54,7 +57,7 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
     if (!encodedPayload) { return undefined; }
 
     const decodedPayloadJson = atob(encodedPayload);
-    const decodedPayload = OAuth2WindowDotOpen.jsonParseOrUndefined<TokenPayload>(
+    const decodedPayload = OAuth2PopupFlow.jsonParseOrUndefined<TokenPayload>(
       decodedPayloadJson
     );
     return decodedPayload;
@@ -63,7 +66,7 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
   async tryLoginPopup() {
     if (this.loggedIn()) { return true; }
 
-    const popup = open(`${this.authorizationUrl}?${OAuth2WindowDotOpen.encodeObjectToUri({
+    const popup = open(`${this.authorizationUrl}?${OAuth2PopupFlow.encodeObjectToUri({
       client_id: this.clientId,
       response_type: this.responseType,
       redirect_uri: this.redirectUri,
@@ -86,6 +89,12 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
     const decodedPayload = this._rawTokenPayload;
     if (!decodedPayload) { return false; }
 
+    if (this.tokenValidator) {
+      const token = this._rawToken;
+      if (!token) { throw new Error('Token was falsy but token payload was not.'); }
+      if (!this.tokenValidator({ payload: decodedPayload, token })) { return false; }
+    }
+
     const exp = decodedPayload.exp;
     if (!exp) { return false; }
 
@@ -103,7 +112,7 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
     if (!hashMatch) { return false; }
     const hash = hashMatch[1];
 
-    const authorizationResponse = OAuth2WindowDotOpen.decodeUriToObject(hash);
+    const authorizationResponse = OAuth2PopupFlow.decodeUriToObject(hash);
     const rawToken = authorizationResponse[this.accessTokenResponseKey];
     if (!rawToken) { return false; }
     this._rawToken = rawToken;
@@ -112,7 +121,7 @@ export class OAuth2WindowDotOpen<TokenPayload extends { exp: number }> {
 
   async authenticated() {
     while (!this.loggedIn()) {
-      await OAuth2WindowDotOpen.time(this.pollingTime);
+      await OAuth2PopupFlow.time(this.pollingTime);
     }
   }
 

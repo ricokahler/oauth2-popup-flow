@@ -4,5 +4,8 @@
     "module": "commonjs",
     "lib": ["dom", "es2015"],
     "strict": true
-  }
+  },
+  "exclude": [
+    "./examples"
+  ]
 }

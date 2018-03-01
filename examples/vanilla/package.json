@@ -11,6 +11,6 @@
   "license": "MIT",
   "dependencies": {
     "http-server": "^0.11.1",
-    "oauth2-window-dot-open": "file:../.."
+    "oauth2-popup-flow": "file:../.."
   }
 }

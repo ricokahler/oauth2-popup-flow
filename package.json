@@ -1,8 +1,9 @@
 {
-  "name": "oauth2-window-dot-open",
+  "name": "oauth2-popup-flow",
   "version": "0.0.0",
   "description": "A very simple oauth2 implicit flow library that uses window.open.",
-  "main": "./dist/oauth2-window-dot-open.js",
+  "main": "./dist/oauth2-popup-flow.js",
+  "typings": "./src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack -p"
