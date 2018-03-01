@@ -122,7 +122,7 @@ describe('OAuth2PopupFlow', () => {
 
       expect(auth.responseType).toBe('token');
 
-      // copied from other test
+      // copied from other tests
       expect(auth.accessTokenResponseKey).toBe(options.accessTokenResponseKey);
       expect(auth.accessTokenStorageKey).toBe(options.accessTokenStorageKey);
       expect(auth.additionalAuthorizationParameters).toBe(additionalAuthorizationParameters);
@@ -162,7 +162,7 @@ describe('OAuth2PopupFlow', () => {
 
       expect(auth.accessTokenStorageKey).toBe('token');
 
-      // copied from other test
+      // copied from other tests
       expect(auth.accessTokenResponseKey).toBe(options.accessTokenResponseKey);
       expect(auth.additionalAuthorizationParameters).toBe(additionalAuthorizationParameters);
       expect(auth.authorizationUrl).toBe(options.authorizationUrl);
@@ -202,13 +202,90 @@ describe('OAuth2PopupFlow', () => {
 
       expect(auth.accessTokenResponseKey).toBe('access_token');
 
-      // copied from other test
+      // copied from other tests
       expect(auth.accessTokenStorageKey).toBe(options.accessTokenStorageKey);
       expect(auth.additionalAuthorizationParameters).toBe(additionalAuthorizationParameters);
       expect(auth.authorizationUrl).toBe(options.authorizationUrl);
       expect(auth.beforePopup).toBe(beforePopup);
       expect(auth.clientId).toBe(options.clientId);
       expect(auth.pollingTime).toBe(options.pollingTime);
+      expect(auth.redirectUri).toBe(options.redirectUri);
+      expect(auth.responseType).toBe(options.responseType);
+      expect(auth.scope).toBe(options.scope);
+      expect(auth.storage).toBe(storage);
+      expect(auth.tokenValidator).toBe(tokenValidator);
+    });
+    it('uses the default `storage` of `localStorage` when none is present', () => {
+      function beforePopup() { }
+      function tokenValidator(options: { token: string, payload: ExampleTokenPayload }) {
+        return true;
+      }
+      const additionalAuthorizationParameters = { foo: 'bar', };
+
+      const options = {
+        accessTokenResponseKey: 'test_response_key',
+        accessTokenStorageKey: 'test_storage_key',
+        additionalAuthorizationParameters,
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        beforePopup,
+        clientId: 'test_client_id',
+        pollingTime: Math.random(),
+        redirectUri: 'http://localhost:8080/redirect',
+        responseType: 'test_token',
+        scope: 'test scope',
+        tokenValidator,
+      };
+
+      const auth = new OAuth2PopupFlow(options);
+
+      expect(auth.storage).toBe(window.localStorage);
+
+      expect(auth.accessTokenResponseKey).toBe(options.accessTokenResponseKey);
+      expect(auth.accessTokenStorageKey).toBe(options.accessTokenStorageKey);
+      expect(auth.additionalAuthorizationParameters).toBe(additionalAuthorizationParameters);
+      expect(auth.authorizationUrl).toBe(options.authorizationUrl);
+      expect(auth.beforePopup).toBe(beforePopup);
+      expect(auth.clientId).toBe(options.clientId);
+      expect(auth.pollingTime).toBe(options.pollingTime);
+      expect(auth.redirectUri).toBe(options.redirectUri);
+      expect(auth.responseType).toBe(options.responseType);
+      expect(auth.scope).toBe(options.scope);
+      expect(auth.tokenValidator).toBe(tokenValidator);
+    });
+    it('uses the default `pollingTime` of `200` when none is present', () => {
+      function beforePopup() { }
+      function tokenValidator(options: { token: string, payload: ExampleTokenPayload }) {
+        return true;
+      }
+      const additionalAuthorizationParameters = { foo: 'bar', };
+
+      const storage = {} as Storage;
+
+      const options = {
+        accessTokenResponseKey: 'test_response_key',
+        accessTokenStorageKey: 'test_storage_key',
+        additionalAuthorizationParameters,
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        beforePopup,
+        clientId: 'test_client_id',
+        redirectUri: 'http://localhost:8080/redirect',
+        responseType: 'test_token',
+        scope: 'test scope',
+        storage,
+        tokenValidator,
+      };
+
+      const auth = new OAuth2PopupFlow(options);
+
+      expect(auth.pollingTime).toBe(200);
+
+      // copied from other tests
+      expect(auth.accessTokenResponseKey).toBe(options.accessTokenResponseKey);
+      expect(auth.accessTokenStorageKey).toBe(options.accessTokenStorageKey);
+      expect(auth.additionalAuthorizationParameters).toBe(additionalAuthorizationParameters);
+      expect(auth.authorizationUrl).toBe(options.authorizationUrl);
+      expect(auth.beforePopup).toBe(beforePopup);
+      expect(auth.clientId).toBe(options.clientId);
       expect(auth.redirectUri).toBe(options.redirectUri);
       expect(auth.responseType).toBe(options.responseType);
       expect(auth.scope).toBe(options.scope);

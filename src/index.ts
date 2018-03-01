@@ -35,7 +35,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     this.responseType = options.responseType || 'token';
     this.accessTokenStorageKey = options.accessTokenStorageKey || 'token';
     this.accessTokenResponseKey = options.accessTokenResponseKey || 'access_token';
-    this.storage = options.storage || localStorage;
+    this.storage = options.storage || window.localStorage;
     this.pollingTime = options.pollingTime || 200;
     this.additionalAuthorizationParameters = options.additionalAuthorizationParameters || {};
     this.tokenValidator = options.tokenValidator;
