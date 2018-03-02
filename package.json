@@ -6,7 +6,8 @@
   "typings": "./src/index.ts",
   "scripts": {
     "test": "nyc jasmine-ts \"src/**/*.spec.ts\"",
-    "build": "webpack -p"
+    "build": "webpack -p",
+    "docs": "typedoc --out docs/typedoc src/"
   },
   "author": "Rico Kahler",
   "license": "MIT",
@@ -21,6 +22,7 @@
     "jasmine-ts": "^0.2.1",
     "jsdom": "^11.6.2",
     "nyc": "^11.4.1",
+    "typedoc": "^0.10.0",
     "typescript": "^2.7.2",
     "webpack": "^4.0.1",
     "webpack-cli": "^2.0.9"
