@@ -23,7 +23,7 @@ function time(milliseconds: number) {
 
 export const auth = new OAuth2PopupFlow<TokenPayload>({
   // you would get this values from `environment.ts` in real use.
-  authorizationUrl: 'https://formandfocus.auth0.com/authorize',
+  authorizationUri: 'https://formandfocus.auth0.com/authorize',
   clientId: 'v90UOqUtmib6bTNIm3zHuYboekqoAXwN',
   redirectUri: 'http://localhost:4200/redirect',
   scope: 'openid profile',
