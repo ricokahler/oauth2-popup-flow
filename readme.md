@@ -1,4 +1,4 @@
-# OAuth2 Popup Flow
+# OAuth2 Popup Flow · [![Build Status](https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master)](https://travis-ci.org/ricokahler/oauth2-popup-flow)
 
 > A very simple oauth2 implicit flow library with no dependencies that uses `window.open`.
 
