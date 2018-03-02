@@ -191,18 +191,6 @@ describe('OAuth2PopupFlow', () => {
 
       expect(auth.pollingTime).toBe(200);
     });
-    it('uses the default `additionalAuthorizationParameters` of `{}` when none is present', () => {
-      const options = {
-        authorizationUri: 'http://example.com/oauth/authorize',
-        clientId: 'test_client_id',
-        redirectUri: 'http://localhost:8080/redirect',
-        scope: 'test scope',
-      };
-
-      const auth = new OAuth2PopupFlow(options);
-
-      expect(auth.additionalAuthorizationParameters).toEqual({});
-    });
   });
 
   describe('_rawToken', () => {
@@ -752,6 +740,56 @@ describe('OAuth2PopupFlow', () => {
       expect(auth.loggedIn()).toBe(false);
       expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
       expect(beforePopupCalled).toBe(true);
+    });
+    it('calls `additionalAuthorizationParameters` if it is a function', async () => {
+      const storage = createTestStorage();
+      let openCalled = false;
+
+      (window as any).open = (url: string) => {
+        expect(url.includes('foo=bar')).toBe(true);
+        openCalled = true;
+      };
+
+      const options = {
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+        additionalAuthorizationParameters: () => {
+          return {
+            foo: 'bar'
+          };
+        }
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
+      expect(openCalled).toBe(true);
+    });
+    it('uses `additionalAuthorizationParameters` if it is an object', async () => {
+      const storage = createTestStorage();
+      let openCalled = false;
+
+      (window as any).open = (url: string) => {
+        expect(url.includes('foo=bar')).toBe(true);
+        openCalled = true;
+      };
+
+      const options = {
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+        additionalAuthorizationParameters: { foo: 'bar' },
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
+      expect(openCalled).toBe(true);
     });
     it('returns `SUCCESS` and calls `close` on the popup', async () => {
       const storage = createTestStorage();
