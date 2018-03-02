@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master)](https://travis-ci.org/ricokahler/oauth2-popup-flow) [![Coverage Status](https://coveralls.io/repos/github/ricokahler/oauth2-popup-flow/badge.svg?branch=master)](https://coveralls.io/github/ricokahler/oauth2-popup-flow?branch=master)
+
 ```
   ____               _   _     ___  
  / __ \   /\        | | | |   |__ \ 
@@ -6,7 +8,7 @@
 | |__| / ____ \ |_| | |_| | | |/ /_ 
  \____/_/    \_\__,_|\__|_| |_|____|
                                         
-                          /$$$$$$$                                        
+                           /$$$$$$$                                        
                           | $$__  $$                                       
                           | $$  \ $$ /$$$$$$   /$$$$$$  /$$   /$$  /$$$$$$ 
                           | $$$$$$$//$$__  $$ /$$__  $$| $$  | $$ /$$__  $$
@@ -23,11 +25,15 @@
                                                                           |_|    |_|\___/ \_/\_/  
 ```                          
 
-[![Build Status](https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master)](https://travis-ci.org/ricokahler/oauth2-popup-flow) [![Coverage Status](https://coveralls.io/repos/github/ricokahler/oauth2-popup-flow/badge.svg?branch=master)](https://coveralls.io/github/ricokahler/oauth2-popup-flow?branch=master)
+## A very simple oauth2 implicit flow library with no dependencies that uses `window.open`.
 
-> A very simple oauth2 implicit flow library with no dependencies that uses `window.open`.
-
-
+* Simplicity as a feature—only ~185 SLOC.
+* No dependencies.
+* Easily integrates with React, Angular, Vue etc.
+* Never interrupt or reload the state of your client to login.
+* To get a token, simply call `oauth2PopupFlow.token()` which always returns a `Promise<string>` of the token.
+* To get the token payload, simply call `oauth2PopupFlow.tokenPayload()` which always returns a `Promise<TokenPayload>`.
+* Statically typed API via Typescript for use within Javascript or Typescript.
 
 [Checkout the API docs for more info](https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html)
 
