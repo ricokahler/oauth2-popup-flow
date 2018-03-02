@@ -643,4 +643,163 @@ describe('OAuth2PopupFlow', () => {
       expect(storage.getItem('token')).toBe('some token thing');
     });
   });
+
+  describe('tryLoginPopup', () => {
+    it('returns `ALREADY_LOGGED_IN` if already `loggedIn()`', async () => {
+      const storage = createTestStorage();
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) + 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(auth.loggedIn()).toBe(true);
+      expect(await auth.tryLoginPopup()).toBe('ALREADY_LOGGED_IN');
+    });
+    it('doesn\'t call `beforePopup` if it doesn\'t exist', async () => {
+      const storage = createTestStorage();
+
+      (window as any).open = () => undefined;
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(auth.loggedIn()).toBe(false);
+      expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
+    });
+    it('calls `beforePopup` synchronously', async () => {
+      const storage = createTestStorage();
+
+      (window as any).open = () => undefined;
+
+      let beforePopupCalled = false;
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+        beforePopup: () => {
+          beforePopupCalled = true;
+        },
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(auth.loggedIn()).toBe(false);
+      expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
+      expect(beforePopupCalled).toBe(true);
+    });
+    it('calls `beforePopup` asynchronously', async () => {
+      const storage = createTestStorage();
+
+      (window as any).open = () => undefined;
+
+      let beforePopupCalled = false;
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+        beforePopup: async () => {
+          expect(await OAuth2PopupFlow.time(0)).toBe('TIMER');
+          beforePopupCalled = true;
+        },
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(auth.loggedIn()).toBe(false);
+      expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
+      expect(beforePopupCalled).toBe(true);
+    });
+    it('returns `LOGIN_TIMEOUT` if `authenticated()` doesn\'t resolve', async () => {
+      const storage = createTestStorage();
+
+      (window as any).open = () => ({
+        close: () => undefined,
+      });
+
+      let beforePopupCalled = false;
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+        loginTimeout: 0,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(auth.loggedIn()).toBe(false);
+      expect(await auth.tryLoginPopup()).toBe('LOGIN_TIMEOUT');
+    });
+    it('returns `SUCCESS` and calls `close` on the popup', async () => {
+      const storage = createTestStorage();
+
+      let closedCalled = false;
+
+      (window as any).open = () => ({
+        close: () => {
+          closedCalled = true;
+        },
+      });
+
+      let beforePopupCalled = false;
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) + 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(auth.loggedIn()).toBe(false);
+      expect(await auth.tryLoginPopup()).toBe('SUCCESS');
+      expect(closedCalled).toBe(true);
+    });
+  });
 });
