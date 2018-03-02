@@ -12,7 +12,6 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
   tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean,
   beforePopup?: () => any | Promise<any>,
   afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void,
-  loginTimeout?: number,
 }
 
 export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
@@ -29,7 +28,6 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean;
   beforePopup?: () => any | Promise<any>;
   afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void;
-  loginTimeout: number;
 
   constructor(options: OAuth2PopupFlowOptions<TokenPayload>) {
     this.authorizationUrl = options.authorizationUrl;
@@ -45,10 +43,6 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     this.tokenValidator = options.tokenValidator;
     this.beforePopup = options.beforePopup;
     this.afterResponse = options.afterResponse;
-    this.loginTimeout = (/*if*/ typeof options.loginTimeout === 'number'
-      ? options.loginTimeout
-      : 60 * 1000
-    );
   }
 
   private get _rawToken() {
@@ -131,12 +125,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     })}`);
     if (!popup) { return 'POPUP_FAILED'; }
 
-    const raceResult = await Promise.race([
-      this.authenticated(),
-      OAuth2PopupFlow.time(this.loginTimeout)
-    ]);
-
-    if (raceResult === 'TIMER') { return 'LOGIN_TIMEOUT'; }
+    await this.authenticated();
 
     popup.close();
 
@@ -184,8 +173,8 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   static time(milliseconds: number) {
     return new Promise<'TIMER'>(resolve => window.setTimeout(
       () => resolve('TIMER'),
-      milliseconds)
-    );
+      milliseconds
+    ));
   }
 
   /**

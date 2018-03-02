@@ -1,4 +1,4 @@
-import { OAuth2PopupFlow, OAuth2PopupFlowOptions } from './';
+import { OAuth2PopupFlow } from './';
 
 interface ExampleTokenPayload {
   exp: number,
@@ -91,7 +91,7 @@ describe('OAuth2PopupFlow', () => {
     it('creates instances from the `OAuth2PopupFlowOptions` object', () => {
       function beforePopup() { }
       function afterResponse() { }
-      function tokenValidator(options: { token: string, payload: ExampleTokenPayload }) {
+      function tokenValidator() {
         return true;
       }
       const additionalAuthorizationParameters = { foo: 'bar', };
@@ -752,29 +752,6 @@ describe('OAuth2PopupFlow', () => {
       expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
       expect(beforePopupCalled).toBe(true);
     });
-    it('returns `LOGIN_TIMEOUT` if `authenticated()` doesn\'t resolve', async () => {
-      const storage = createTestStorage();
-
-      (window as any).open = () => ({
-        close: () => undefined,
-      });
-
-      let beforePopupCalled = false;
-
-      const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
-        clientId: 'some_test_client',
-        redirectUri: '',
-        scope: 'openid profile',
-        storage,
-        loginTimeout: 0,
-      };
-
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-
-      expect(auth.loggedIn()).toBe(false);
-      expect(await auth.tryLoginPopup()).toBe('LOGIN_TIMEOUT');
-    });
     it('returns `SUCCESS` and calls `close` on the popup', async () => {
       const storage = createTestStorage();
 
@@ -786,7 +763,7 @@ describe('OAuth2PopupFlow', () => {
         },
       });
 
-      let beforePopupCalled = false;
+      // let beforePopupCalled = false;
 
       const options = {
         authorizationUrl: 'http://example.com/oauth/authorize',
