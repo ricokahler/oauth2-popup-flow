@@ -7,7 +7,7 @@
   "scripts": {
     "test": "nyc jasmine-ts \"src/**/*.spec.ts\" | coveralls",
     "build": "webpack -p",
-    "docs": "typedoc --out docs/typedoc src/"
+    "docs": "typedoc --out docs/ src/"
   },
   "author": "Rico Kahler",
   "license": "MIT",
@@ -40,7 +40,6 @@
     ],
     "extension": [
       ".ts"
-    ],
-    "report-dir": "docs"
+    ]
   }
 }

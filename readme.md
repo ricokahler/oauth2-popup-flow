@@ -2,10 +2,10 @@
 
 > A very simple oauth2 implicit flow library with no dependencies that uses `window.open`.
 
-## An OAuth2 for a specialized use-case
+[Checkout the API docs for more info](https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html)
 
 # Requirements
 
-* [`String.prototype.startsWith`][0] (you may need a polyfill if you're targeing IE etc)
+* [`String.prototype.startsWith`][0] (you may need a polyfill if you're targeting IE etc)
 
 [0]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith
