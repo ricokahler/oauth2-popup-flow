@@ -11,6 +11,7 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
   additionalAuthorizationParameters?: { [key: string]: string },
   tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean,
   beforePopup?: () => any | Promise<any>,
+  afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void,
 }
 
 export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
@@ -26,6 +27,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   additionalAuthorizationParameters: { [key: string]: string };
   tokenValidator?: (options: { payload: TokenPayload, token: string }) => boolean;
   beforePopup?: () => any | Promise<any>;
+  afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void;
 
   constructor(options: OAuth2PopupFlowOptions<TokenPayload>) {
     this.authorizationUrl = options.authorizationUrl;
@@ -40,6 +42,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     this.additionalAuthorizationParameters = options.additionalAuthorizationParameters || {};
     this.tokenValidator = options.tokenValidator;
     this.beforePopup = options.beforePopup;
+    this.afterResponse = options.afterResponse;
   }
 
   private get _rawToken() {
@@ -88,15 +91,18 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   }
 
   handleRedirect() {
-    const locationHref = location.href;
+    const locationHref = window.location.href;
     if (!locationHref.startsWith(this.redirectUri)) { return false; }
-    const rawHash = location.hash;
+    const rawHash = window.location.hash;
     if (!rawHash) { return false; }
     const hashMatch = /#(.*)/.exec(rawHash);
     if (!hashMatch) { return false; }
     const hash = hashMatch[1];
 
     const authorizationResponse = OAuth2PopupFlow.decodeUriToObject(hash);
+    if (this.afterResponse) {
+      this.afterResponse(authorizationResponse);
+    }
     const rawToken = authorizationResponse[this.accessTokenResponseKey];
     if (!rawToken) { return false; }
     this._rawToken = rawToken;
