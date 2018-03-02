@@ -45,7 +45,10 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     this.tokenValidator = options.tokenValidator;
     this.beforePopup = options.beforePopup;
     this.afterResponse = options.afterResponse;
-    this.loginTimeout = options.loginTimeout || (60 * 1000);
+    this.loginTimeout = (/*if*/ typeof options.loginTimeout === 'number'
+      ? options.loginTimeout
+      : 60 * 1000
+    );
   }
 
   private get _rawToken() {
@@ -95,11 +98,11 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
 
   handleRedirect() {
     const locationHref = window.location.href;
-    if (!locationHref.startsWith(this.redirectUri)) { return false; }
+    if (!locationHref.startsWith(this.redirectUri)) { return 'REDIRECT_URI_MISMATCH'; }
     const rawHash = window.location.hash;
-    if (!rawHash) { return false; }
+    if (!rawHash) { return 'FALSY_HASH'; }
     const hashMatch = /#(.*)/.exec(rawHash);
-    if (!hashMatch) { return false; }
+    if (!hashMatch) { return 'NO_HASH_MATCH'; }
     const hash = hashMatch[1];
 
     const authorizationResponse = OAuth2PopupFlow.decodeUriToObject(hash);
@@ -107,9 +110,9 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
       this.afterResponse(authorizationResponse);
     }
     const rawToken = authorizationResponse[this.accessTokenResponseKey];
-    if (!rawToken) { return false; }
+    if (!rawToken) { return 'FALSY_TOKEN'; }
     this._rawToken = rawToken;
-    return true;
+    return 'SUCCESS';
   }
 
   async tryLoginPopup() {
@@ -179,7 +182,10 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   }
 
   static time(milliseconds: number) {
-    return new Promise<'TIMER'>(resolve => setTimeout(() => resolve('TIMER')));
+    return new Promise<'TIMER'>(resolve => window.setTimeout(
+      () => resolve('TIMER'),
+      milliseconds)
+    );
   }
 
   /**

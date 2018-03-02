@@ -11,4 +11,5 @@ global.window = {
   open: () => { },
   btoa: window.btoa.bind(window),
   atob: window.atob.bind(window),
+  setTimeout: window.setTimeout.bind(window),
 };

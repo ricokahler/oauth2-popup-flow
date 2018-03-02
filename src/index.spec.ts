@@ -41,8 +41,21 @@ describe('OAuth2PopupFlow', () => {
 
   describe('time', () => {
     it('calls `setTimeout` and returns `TIMER`', async () => {
-      const timer = await OAuth2PopupFlow.time(10);
-      expect(timer).toBe('TIMER');
+      function fiveMilliseconds() {
+        return new Promise<5>(resolve => setTimeout(() => resolve(5), 5));
+      }
+
+      const race = await Promise.race([
+        OAuth2PopupFlow.time(10),
+        fiveMilliseconds(),
+      ]);
+      expect(race).toBe(5);
+
+      const otherRace = await Promise.race([
+        OAuth2PopupFlow.time(0),
+        fiveMilliseconds(),
+      ]);
+      expect(otherRace).toBe('TIMER');
     });
   });
 
@@ -519,7 +532,7 @@ describe('OAuth2PopupFlow', () => {
   });
 
   describe('handleRedirect', () => {
-    it('returns early with `false` if location.href doesn\'t `startWith` the `redirectUri`', () => {
+    it('returns early with `REDIRECT_URI_MISMATCH` if location doesn\'t match the redirect', () => {
       const storage = createTestStorage();
 
       const options = {
@@ -535,9 +548,9 @@ describe('OAuth2PopupFlow', () => {
       window.location.hash = 'something%20else';
 
       const result = auth.handleRedirect();
-      expect(result).toBe(false);
+      expect(result).toBe('REDIRECT_URI_MISMATCH');
     });
-    it('returns early with `false` if the hash is falsy', () => {
+    it('returns early with `FALSY_HASH` if the hash is falsy', () => {
       const storage = createTestStorage();
 
       const options = {
@@ -553,9 +566,9 @@ describe('OAuth2PopupFlow', () => {
       window.location.hash = '';
 
       const result = auth.handleRedirect();
-      expect(result).toBe(false);
+      expect(result).toBe('FALSY_HASH');
     });
-    it('returns early with `false` if hash doesn\'t match /#(.*)/', () => {
+    it('returns early with `NO_HASH_MATCH` if hash doesn\'t match /#(.*)/', () => {
       const storage = createTestStorage();
 
       const options = {
@@ -570,7 +583,7 @@ describe('OAuth2PopupFlow', () => {
       window.location.hash = 'shouldn\t match';
 
       const result = auth.handleRedirect();
-      expect(result).toBe(false);
+      expect(result).toBe('NO_HASH_MATCH');
     });
     it('calls `afterResponse` with the `decodeUriToObject`', () => {
       const storage = createTestStorage();
@@ -599,7 +612,7 @@ describe('OAuth2PopupFlow', () => {
       window.location.hash = `#${OAuth2PopupFlow.encodeObjectToUri(objectToEncode)}`;
 
       const result = auth.handleRedirect();
-      expect(result).toBe(true);
+      expect(result).toBe('SUCCESS');
       expect(afterResponseCalled).toBe(true);
     });
     it('returns early with `false` if `rawToken` is falsy', () => {
@@ -619,9 +632,9 @@ describe('OAuth2PopupFlow', () => {
       })}`;
 
       const result = auth.handleRedirect();
-      expect(result).toBe(false);
+      expect(result).toBe('FALSY_TOKEN');
     });
-    it('returns `true` setting the `_rawToken` if the token is good', () => {
+    it('returns `SUCCESS` setting the `_rawToken` if the token is good', () => {
       const storage = createTestStorage();
 
       const options = {
@@ -639,7 +652,7 @@ describe('OAuth2PopupFlow', () => {
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       const result = auth.handleRedirect();
-      expect(result).toBe(true);
+      expect(result).toBe('SUCCESS');
       expect(storage.getItem('token')).toBe('some token thing');
     });
   });
@@ -793,9 +806,11 @@ describe('OAuth2PopupFlow', () => {
         window.btoa(JSON.stringify(examplePayload)),
         'this is the signature section'
       ].join('.');
-      storage._storage.token = exampleToken;
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      OAuth2PopupFlow.time(0).then(() => {
+        storage._storage.token = exampleToken;
+      })
 
       expect(auth.loggedIn()).toBe(false);
       expect(await auth.tryLoginPopup()).toBe('SUCCESS');
