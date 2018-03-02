@@ -763,8 +763,6 @@ describe('OAuth2PopupFlow', () => {
         },
       });
 
-      // let beforePopupCalled = false;
-
       const options = {
         authorizationUrl: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
@@ -792,6 +790,141 @@ describe('OAuth2PopupFlow', () => {
       expect(auth.loggedIn()).toBe(false);
       expect(await auth.tryLoginPopup()).toBe('SUCCESS');
       expect(closedCalled).toBe(true);
+    });
+  });
+
+  describe('authenticated', () => {
+    it('only resolves after a `loggedIn()` is truthy', async () => {
+      const storage = createTestStorage();
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) + 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      OAuth2PopupFlow.time(10).then(() => {
+        storage._storage.token = exampleToken;
+      });
+
+      expect(auth.loggedIn()).toBe(false);
+      // this won't resolve and the test will fail unless `loggedIn` is truthy
+      await auth.authenticated();
+    });
+  });
+
+  describe('token', () => {
+    it('calls `tryLoginPopup` when not `loggedIn()`', async () => {
+      const storage = createTestStorage();
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(auth.loggedIn()).toBe(false);
+      spyOn(auth, 'loggedIn');
+      spyOn(auth, 'tryLoginPopup');
+      spyOn(auth, 'authenticated');
+
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) + 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+
+      storage._storage.token = exampleToken;
+
+      const token = await auth.token();
+
+      expect(token).toEqual(exampleToken);
+      expect(auth.loggedIn).toHaveBeenCalled();
+      expect(auth.tryLoginPopup).toHaveBeenCalled();
+      expect(auth.authenticated).toHaveBeenCalled();
+    });
+    it('returns the `_rawToken` if `loggedIn()`', async () => {
+      const storage = createTestStorage();
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) + 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+
+      storage._storage.token = exampleToken;
+
+      const token = await auth.token();
+
+      expect(token).toEqual(exampleToken);
+    });
+    it('throws if `_rawToken` was falsy after being authenticated', async () => {
+      const storage = createTestStorage();
+
+      const options = {
+        authorizationUrl: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+
+      expect(auth.loggedIn()).toBe(false);
+      spyOn(auth, 'loggedIn');
+      spyOn(auth, 'tryLoginPopup');
+      spyOn(auth, 'authenticated');
+
+      let catchCalled = false;
+
+      try {
+        await auth.token();
+      } catch (e) {
+        expect(e.message).toBe('Token was falsy after being authenticated.');
+        catchCalled = true;
+      } finally {
+        expect(auth.loggedIn).toHaveBeenCalled();
+        expect(catchCalled).toBe(true);
+      }
     });
   });
 });
