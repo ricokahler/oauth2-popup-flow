@@ -102,7 +102,7 @@ describe('OAuth2PopupFlow', () => {
         accessTokenResponseKey: 'test_response_key',
         accessTokenStorageKey: 'test_storage_key',
         additionalAuthorizationParameters,
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         beforePopup,
         clientId: 'test_client_id',
         pollingTime: Math.random(),
@@ -119,7 +119,7 @@ describe('OAuth2PopupFlow', () => {
       expect(auth.accessTokenResponseKey).toBe(options.accessTokenResponseKey);
       expect(auth.accessTokenStorageKey).toBe(options.accessTokenStorageKey);
       expect(auth.additionalAuthorizationParameters).toBe(additionalAuthorizationParameters);
-      expect(auth.authorizationUrl).toBe(options.authorizationUrl);
+      expect(auth.authorizationUri).toBe(options.authorizationUri);
       expect(auth.beforePopup).toBe(beforePopup);
       expect(auth.clientId).toBe(options.clientId);
       expect(auth.pollingTime).toBe(options.pollingTime);
@@ -132,7 +132,7 @@ describe('OAuth2PopupFlow', () => {
     });
     it('uses the default `responseType` of `token` when none is present', () => {
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'test_client_id',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'test scope',
@@ -144,7 +144,7 @@ describe('OAuth2PopupFlow', () => {
     });
     it('uses the default `accessTokenStorageKey` of `token` when none is present', () => {
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'test_client_id',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'test scope',
@@ -156,7 +156,7 @@ describe('OAuth2PopupFlow', () => {
     });
     it('uses the default `accessTokenResponseKey` of `access_token` when none is present', () => {
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'test_client_id',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'test scope',
@@ -168,7 +168,7 @@ describe('OAuth2PopupFlow', () => {
     });
     it('uses the default `storage` of `window.localStorage` when none is present', () => {
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'test_client_id',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'test scope',
@@ -180,7 +180,7 @@ describe('OAuth2PopupFlow', () => {
     });
     it('uses the default `pollingTime` of `200` when none is present', () => {
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'test_client_id',
         redirectUri: 'http://localhost:8080/redirect',
         responseType: 'test_token',
@@ -193,7 +193,7 @@ describe('OAuth2PopupFlow', () => {
     });
     it('uses the default `additionalAuthorizationParameters` of `{}` when none is present', () => {
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'test_client_id',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'test scope',
@@ -210,7 +210,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -225,7 +225,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -242,7 +242,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -270,7 +270,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -290,7 +290,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -304,7 +304,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -323,7 +323,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -351,7 +351,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -379,7 +379,7 @@ describe('OAuth2PopupFlow', () => {
       let tokenValidatorCalled = false;
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -412,7 +412,7 @@ describe('OAuth2PopupFlow', () => {
       let tokenValidatorCalled = false;
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -443,7 +443,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = exampleToken;
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -467,7 +467,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = exampleToken;
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -491,7 +491,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = exampleToken;
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -518,7 +518,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = exampleToken;
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -536,7 +536,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
         scope: 'openid profile',
@@ -554,7 +554,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -572,7 +572,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -597,7 +597,7 @@ describe('OAuth2PopupFlow', () => {
       };
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -619,7 +619,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -634,11 +634,11 @@ describe('OAuth2PopupFlow', () => {
       const result = auth.handleRedirect();
       expect(result).toBe('FALSY_TOKEN');
     });
-    it('returns `SUCCESS` setting the `_rawToken` if the token is good', () => {
+    it('returns `SUCCESS` setting the `_rawToken` and clearing the hash if token is valid', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -654,6 +654,7 @@ describe('OAuth2PopupFlow', () => {
       const result = auth.handleRedirect();
       expect(result).toBe('SUCCESS');
       expect(storage.getItem('token')).toBe('some token thing');
+      expect(window.location.hash).toBe('');
     });
   });
 
@@ -673,7 +674,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = exampleToken;
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -691,7 +692,7 @@ describe('OAuth2PopupFlow', () => {
       (window as any).open = () => undefined;
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -711,7 +712,7 @@ describe('OAuth2PopupFlow', () => {
       let beforePopupCalled = false;
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -735,7 +736,7 @@ describe('OAuth2PopupFlow', () => {
       let beforePopupCalled = false;
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -764,7 +765,7 @@ describe('OAuth2PopupFlow', () => {
       });
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -798,7 +799,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -832,7 +833,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -870,7 +871,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -900,7 +901,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -933,7 +934,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -971,7 +972,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',
@@ -1001,7 +1002,7 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       const options = {
-        authorizationUrl: 'http://example.com/oauth/authorize',
+        authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: '',
         scope: 'openid profile',

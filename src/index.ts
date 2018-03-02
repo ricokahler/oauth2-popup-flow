@@ -1,6 +1,27 @@
+/**
+ * The type of the configuration object used to create a `OAuth2PopupFlow`
+ * 
+ * Each property has a JSDOC description to explain what it does.
+ */
 export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
-  authorizationUrl: string,
+  /**
+   * The full URI of the authorization endpoint provided by the authorization server.
+   * 
+   * e.g. `https://example.com/oauth/authorize`
+   */
+  authorizationUri: string,
+  /**
+   * The client ID of your application provided by the authorization server. This client ID is sent
+   * to the authorization server using `authorizationUrl` endpoint in the query portion of the URL
+   * along with the other parameters.
+   * 
+   * e.g. `https://example.com/oauth/authorize?client_id=CLIENT_ID_VALUE...`
+   */
   clientId: string,
+  /**
+   * The URI that the authorization server will to redirect after the user has been authenticated.
+   * The authorization server will add a hash (i.e. `#`) to the redirect URI so it can be parsed
+   */
   redirectUri: string,
   scope: string,
   responseType?: string,
@@ -15,7 +36,7 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
 }
 
 export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
-  authorizationUrl: string;
+  authorizationUri: string;
   clientId: string;
   redirectUri: string;
   scope: string;
@@ -30,7 +51,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void;
 
   constructor(options: OAuth2PopupFlowOptions<TokenPayload>) {
-    this.authorizationUrl = options.authorizationUrl;
+    this.authorizationUri = options.authorizationUri;
     this.clientId = options.clientId;
     this.redirectUri = options.redirectUri;
     this.scope = options.scope;
@@ -106,6 +127,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     const rawToken = authorizationResponse[this.accessTokenResponseKey];
     if (!rawToken) { return 'FALSY_TOKEN'; }
     this._rawToken = rawToken;
+    window.location.hash = '';
     return 'SUCCESS';
   }
 
@@ -116,7 +138,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
       await Promise.resolve(this.beforePopup());
     }
 
-    const popup = window.open(`${this.authorizationUrl}?${OAuth2PopupFlow.encodeObjectToUri({
+    const popup = window.open(`${this.authorizationUri}?${OAuth2PopupFlow.encodeObjectToUri({
       client_id: this.clientId,
       response_type: this.responseType,
       redirect_uri: this.redirectUri,
