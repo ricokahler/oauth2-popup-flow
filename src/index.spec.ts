@@ -490,6 +490,96 @@ describe('OAuth2PopupFlow', () => {
     });
   });
 
+  describe('tokenExpired', () => {
+    it('returns `false` if the `_rawTokenPayload` is undefined', () => {
+      const storage = createTestStorage();
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      storage._storage.token = undefined;
+
+      expect(auth.tokenExpired()).toBe(false);
+    });
+    it('returns `false` if the `exp` in the payload is falsy', () => {
+      const storage = createTestStorage();
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: 0,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      expect(auth.tokenExpired()).toBe(false);
+    });
+    it('returns `false` if the token is not expired', () => {
+      const storage = createTestStorage();
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) + 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      expect(auth.tokenExpired()).toBe(false);
+    });
+    it('returns `true` if the token is expired', () => {
+      const storage = createTestStorage();
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) - 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section'
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+
+      expect(auth.tokenExpired()).toBe(true);
+    });
+  });
+
   describe('logout', () => {
     it('should remove the token from storage', () => {
       const storage = createTestStorage();

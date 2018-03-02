@@ -16,23 +16,23 @@
                           | $$     | $$  | $$| $$  | $$| $$  | $$| $$  | $$
                           | $$     |  $$$$$$/| $$$$$$$/|  $$$$$$/| $$$$$$$/
                           |__/      \______/ | $$____/  \______/ | $$____/ 
-                                            | $$                | $$      
-                                            | $$                | $$       ______ _               
-                                            |__/                |__/      |  ____| |              
+                                             | $$                | $$      
+                                             | $$                | $$      ______ _               
+                                             |__/                |__/     |  ____| |              
                                                                           | |__  | | _____      __
                                                                           |  __| | |/ _ \ \ /\ / /
                                                                           | |    | | (_) \ V  V / 
                                                                           |_|    |_|\___/ \_/\_/  
 ```                          
 
-## A very simple oauth2 implicit flow library with no dependencies that uses `window.open`.
+## A very simple oauth2 implicit grant flow library<br>with no dependencies that uses `window.open`.
 
-* Simplicity as a feature—only ~185 SLOC.
+* Simplicity as a feature—only ~193 SLOC.
 * No dependencies.
 * Easily integrates with React, Angular, Vue etc.
 * Never interrupt or reload the state of your client to login.
-* To get a token, simply call `oauth2PopupFlow.token()` which always returns a `Promise<string>` of the token.
-* To get the token payload, simply call `oauth2PopupFlow.tokenPayload()` which always returns a `Promise<TokenPayload>`.
+* To get a token, call `oauth2PopupFlow.token()` which returns a `Promise<string>` of the token.
+* To get the payload, call `oauth2PopupFlow.tokenPayload()` which returns a `Promise<TokenPayload>`.
 * Statically typed API via Typescript for use within Javascript or Typescript.
 
 [Checkout the API docs for more info](https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html)

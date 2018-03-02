@@ -264,7 +264,24 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     const exp = decodedPayload.exp;
     if (!exp) { return false; }
 
-    if (new Date().getTime() > exp * 1000) { return false; }
+    if (new Date().getTime() > (exp * 1000)) { return false; }
+
+    return true;
+  }
+
+  /**
+   * Returns true only if there is a token in storage and that token is expired. Use this to method
+   * in conjunction with `loggedIn` to display a message like "you need to *re*login" vs "you need
+   * to login".
+   */
+  tokenExpired() {
+    const decodedPayload = this._rawTokenPayload;
+    if (!decodedPayload) { return false; }
+
+    const exp = decodedPayload.exp;
+    if (!exp) { return false; }
+
+    if (new Date().getTime() <= (exp * 1000)) { return false; }
 
     return true;
   }
