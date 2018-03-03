@@ -57,6 +57,7 @@ interface TokenPayload {
   exp: number,
   other: string,
   stuff: string,
+  username: string,
 }
 
 // create an instance of `OAuth2PopupFlow`
@@ -66,9 +67,52 @@ export const auth = new OAuth2PopupFlow<TokenPayload>({
   redirectUri: 'http://localhost:8080/redirect',
   scope: 'openid profile',
 });
+
+// opens the login popup
+// if the user is already logged in, it won't open the popup
+auth.tryLoginPopup().then(result => {
+  if (result === 'ALREADY_LOGGED_IN') {
+    // ...
+  } else if (result === 'POPUP_FAILED') {
+    // ...
+  } else if (result === 'SUCCESS') {
+    // ...
+  }
+});
+
+// synchronously returns whether or not the user is logged in
+const loggedIn = auth.loggedIn();
+
+async function someAsyncFunction() {
+  // this calls `tryLoginPopup()` if there is no valid token in storage
+  const token = await auth.token();
+
+  const response = await fetch('https://example.com', {
+    method: 'POST',
+    headers: new Headers({
+      Authorization: `Bearer ${token}`,
+    }),
+  });
+}
+
+async function getInfoFromToken() {
+  // this calls `tryLoginPopup()` if there is no valid token in storage
+  // returns the decoded payload of the token
+  const payload = await auth.tokenPayload();
+  return payload.username;
+}
+
+someAsyncFunction();
+getInfoFromToken().then(username => console.log({ username }));
 ```
 
 [Check out the API docs for more info](https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html)
+
+## Examples (WIP)
+
+* [No framework](./examples/vanilla)
+* [Angular](./examples/angular)
+* [React + React Router](./examples/react)
 
 ## Requirements
 

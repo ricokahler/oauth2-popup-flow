@@ -114,6 +114,7 @@
   exp: <span class="hljs-built_in">number</span>,
   other: <span class="hljs-built_in">string</span>,
   stuff: <span class="hljs-built_in">string</span>,
+  username: <span class="hljs-built_in">string</span>,
 }
 
 <span class="hljs-comment">// create an instance of `OAuth2PopupFlow`</span>
@@ -123,8 +124,51 @@
   redirectUri: <span class="hljs-string">'http://localhost:8080/redirect'</span>,
   scope: <span class="hljs-string">'openid profile'</span>,
 });
+
+<span class="hljs-comment">// opens the login popup</span>
+<span class="hljs-comment">// if the user is already logged in, it won't open the popup</span>
+auth.tryLoginPopup().then(<span class="hljs-function"><span class="hljs-params">result</span> =&gt;</span> {
+  <span class="hljs-keyword">if</span> (result === <span class="hljs-string">'ALREADY_LOGGED_IN'</span>) {
+    <span class="hljs-comment">// ...</span>
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (result === <span class="hljs-string">'POPUP_FAILED'</span>) {
+    <span class="hljs-comment">// ...</span>
+  } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (result === <span class="hljs-string">'SUCCESS'</span>) {
+    <span class="hljs-comment">// ...</span>
+  }
+});
+
+<span class="hljs-comment">// synchronously returns whether or not the user is logged in</span>
+<span class="hljs-keyword">const</span> loggedIn = auth.loggedIn();
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">someAsyncFunction</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-comment">// this calls `tryLoginPopup()` if there is no valid token in storage</span>
+  <span class="hljs-keyword">const</span> token = <span class="hljs-keyword">await</span> auth.token();
+
+  <span class="hljs-keyword">const</span> response = <span class="hljs-keyword">await</span> fetch(<span class="hljs-string">'https://example.com'</span>, {
+    method: <span class="hljs-string">'POST'</span>,
+    headers: <span class="hljs-keyword">new</span> Headers({
+      Authorization: <span class="hljs-string">`Bearer <span class="hljs-subst">${token}</span>`</span>,
+    }),
+  });
+}
+
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getInfoFromToken</span>(<span class="hljs-params"></span>) </span>{
+  <span class="hljs-comment">// this calls `tryLoginPopup()` if there is no valid token in storage</span>
+  <span class="hljs-comment">// returns the decoded payload of the token</span>
+  <span class="hljs-keyword">const</span> payload = <span class="hljs-keyword">await</span> auth.tokenPayload();
+  <span class="hljs-keyword">return</span> payload.username;
+}
+
+someAsyncFunction();
+getInfoFromToken().then(<span class="hljs-function"><span class="hljs-params">username</span> =&gt;</span> <span class="hljs-built_in">console</span>.log({ username }));
 </code></pre>
 				<p><a href="https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html">Check out the API docs for more info</a></p>
+				<h2 id="examples-wip-">Examples (WIP)</h2>
+				<ul>
+					<li><a href="./examples/vanilla">No framework</a></li>
+					<li><a href="./examples/angular">Angular</a></li>
+					<li><a href="./examples/react">React + React Router</a></li>
+				</ul>
 				<h2 id="requirements">Requirements</h2>
 				<ul>
 					<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith"><code>String.prototype.startsWith</code></a> (you may need a polyfill if you&#39;re targeting IE etc)</li>
