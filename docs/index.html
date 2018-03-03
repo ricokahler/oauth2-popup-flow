@@ -64,7 +64,6 @@
 	<div class="row">
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
-				<p><a href="https://travis-ci.org/ricokahler/oauth2-popup-flow"><img src="https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master" alt="Build Status"></a> <a href="https://coveralls.io/github/ricokahler/oauth2-popup-flow?branch=master"><img src="https://coveralls.io/repos/github/ricokahler/oauth2-popup-flow/badge.svg?branch=master" alt="Coverage Status"></a></p>
 				<pre><code>  ____               _   _     ___
  / __ \   /\        |<span class="hljs-string"> </span>|<span class="hljs-string"> </span>|<span class="hljs-string"> </span>|<span class="hljs-string">   </span>|<span class="hljs-string">__ \ 
 </span>|<span class="hljs-string"> </span>|<span class="hljs-string">  </span>|<span class="hljs-string"> </span>|<span class="hljs-string"> /  \  _   _</span>|<span class="hljs-string"> </span>|<span class="hljs-string">_</span>|<span class="hljs-string"> </span>|<span class="hljs-string">__    ) </span>|
@@ -87,9 +86,10 @@
                                                                           </span>|<span class="hljs-string">  __</span>|<span class="hljs-string"> </span>|<span class="hljs-string"> </span>|<span class="hljs-string">/ _ \ \ /\ / /
                                                                           </span>|<span class="hljs-string"> </span>|<span class="hljs-string">    </span>|<span class="hljs-string"> </span>|<span class="hljs-string"> (_) \ V  V / 
                                                                           </span>|<span class="hljs-string">_</span>|<span class="hljs-string">    </span>|<span class="hljs-string">_</span>|<span class="hljs-string">\___/ \_/\_/  </span>
-</code></pre><h2 id="a-very-simple-oauth2-implicit-grant-flow-library-br-with-no-dependencies-that-uses-window-open-">A very simple oauth2 implicit grant flow library<br>with no dependencies that uses <code>window.open</code>.</h2>
+</code></pre><p><a href="https://travis-ci.org/ricokahler/oauth2-popup-flow"><img src="https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master" alt="Build Status"></a> <a href="https://coveralls.io/github/ricokahler/oauth2-popup-flow?branch=master"><img src="https://coveralls.io/repos/github/ricokahler/oauth2-popup-flow/badge.svg?branch=master" alt="Coverage Status"></a></p>
+				<h2 id="a-very-simple-oauth2-implicit-grant-flow-library-br-with-no-dependencies-that-uses-window-open-">A very simple oauth2 implicit grant flow library<br>with no dependencies that uses <code>window.open</code>.</h2>
 				<ul>
-					<li>Simplicity as a feature—only ~193 SLOC.</li>
+					<li>Simplicity as a feature—only 193 SLOC.</li>
 					<li>No dependencies.</li>
 					<li>Easily integrates with React, Angular, Vue etc.</li>
 					<li>Never interrupt or reload the state of your client to login.</li>
@@ -97,7 +97,34 @@
 					<li>To get the payload, call <code>oauth2PopupFlow.tokenPayload()</code> which returns a <code>Promise&lt;TokenPayload&gt;</code>.</li>
 					<li>Statically typed API via Typescript for use within Javascript or Typescript.</li>
 				</ul>
-				<p><a href="https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html">Checkout the API docs for more info</a></p>
+				<h2 id="why-the-popup-">Why the popup?</h2>
+				<p>If the user isn&#39;t logged in, the typical OAuth2 implicit grant flow forwards the user to the authorization server&#39;s login page (separate from your app) and then redirects them back. The issue with this is that it requires the app to be reloaded in order to grab a token. This reload complicates your application and may result in lost work due to the app reloading.</p>
+				<p>The popup is a simple solution that allows the 9e load the hosted login page that keep the state of your application.</p>
+				<h2 id="this-library-is-great-if-">This library is great if:</h2>
+				<ul>
+					<li>You already use the implicit grant</li>
+					<li>Your authorization server typically doesn&#39;t prompt the user to login</li>
+					<li>You want the user to automatically be logged in and authenticated in your application</li>
+				</ul>
+				<h1 id="usage">Usage</h1>
+				<pre><code class="lang-ts"><span class="hljs-keyword">import</span> { OAuth2PopupFlow } <span class="hljs-keyword">from</span> <span class="hljs-string">'oauth2-popup-flow'</span>;
+
+<span class="hljs-comment">// create a type for the payload of the token</span>
+<span class="hljs-keyword">interface</span> TokenPayload {
+  exp: <span class="hljs-built_in">number</span>,
+  other: <span class="hljs-built_in">string</span>,
+  stuff: <span class="hljs-built_in">string</span>,
+}
+
+<span class="hljs-comment">// create an instance of `OAuth2PopupFlow`</span>
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> auth = <span class="hljs-keyword">new</span> OAuth2PopupFlow&lt;TokenPayload&gt;({
+  authorizationUri: <span class="hljs-string">'https://example.com/oauth/authorize'</span>,
+  clientId: <span class="hljs-string">'YOUR_CLIENT_ID'</span>,
+  redirectUri: <span class="hljs-string">'http://localhost:8080/redirect'</span>,
+  scope: <span class="hljs-string">'openid profile'</span>,
+});
+</code></pre>
+				<p><a href="https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html">Check out the API docs for more info</a></p>
 				<h2 id="requirements">Requirements</h2>
 				<ul>
 					<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith"><code>String.prototype.startsWith</code></a> (you may need a polyfill if you&#39;re targeting IE etc)</li>

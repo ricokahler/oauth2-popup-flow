@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master)](https://travis-ci.org/ricokahler/oauth2-popup-flow) [![Coverage Status](https://coveralls.io/repos/github/ricokahler/oauth2-popup-flow/badge.svg?branch=master)](https://coveralls.io/github/ricokahler/oauth2-popup-flow?branch=master)
-
 ```
   ____               _   _     ___  
  / __ \   /\        | | | |   |__ \ 
@@ -23,11 +21,13 @@
                                                                           |  __| | |/ _ \ \ /\ / /
                                                                           | |    | | (_) \ V  V / 
                                                                           |_|    |_|\___/ \_/\_/  
-```                          
+```
+
+[![Build Status](https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master)](https://travis-ci.org/ricokahler/oauth2-popup-flow) [![Coverage Status](https://coveralls.io/repos/github/ricokahler/oauth2-popup-flow/badge.svg?branch=master)](https://coveralls.io/github/ricokahler/oauth2-popup-flow?branch=master)
 
 ## A very simple oauth2 implicit grant flow library<br>with no dependencies that uses `window.open`.
 
-* Simplicity as a feature—only ~193 SLOC.
+* Simplicity as a feature—only 193 SLOC.
 * No dependencies.
 * Easily integrates with React, Angular, Vue etc.
 * Never interrupt or reload the state of your client to login.
@@ -35,7 +35,40 @@
 * To get the payload, call `oauth2PopupFlow.tokenPayload()` which returns a `Promise<TokenPayload>`.
 * Statically typed API via Typescript for use within Javascript or Typescript.
 
-[Checkout the API docs for more info](https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html)
+## Why the popup?
+
+If the user isn't logged in, the typical OAuth2 implicit grant flow forwards the user to the authorization server's login page (separate from your app) and then redirects them back. The issue with this is that it requires the app to be reloaded in order to grab a token. This reload complicates your application and may result in lost work due to the app reloading.
+
+The popup is a simple solution that allows the 9e load the hosted login page that keep the state of your application.
+
+## This library is great if:
+
+* You already use the implicit grant
+* Your authorization server typically doesn't prompt the user to login
+* You want the user to automatically be logged in and authenticated in your application
+
+# Usage
+
+```ts
+import { OAuth2PopupFlow } from 'oauth2-popup-flow';
+
+// create a type for the payload of the token
+interface TokenPayload {
+  exp: number,
+  other: string,
+  stuff: string,
+}
+
+// create an instance of `OAuth2PopupFlow`
+export const auth = new OAuth2PopupFlow<TokenPayload>({
+  authorizationUri: 'https://example.com/oauth/authorize',
+  clientId: 'YOUR_CLIENT_ID',
+  redirectUri: 'http://localhost:8080/redirect',
+  scope: 'openid profile',
+});
+```
+
+[Check out the API docs for more info](https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html)
 
 ## Requirements
 
