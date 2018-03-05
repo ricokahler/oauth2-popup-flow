@@ -2,7 +2,7 @@
 const content = document.querySelector('.content');
 
 const auth = new OAuth2PopupFlow.OAuth2PopupFlow({
-  authorizationUrl: 'https://formandfocus.auth0.com/authorize',
+  authorizationUri: 'https://formandfocus.auth0.com/authorize',
   clientId: 'v90UOqUtmib6bTNIm3zHuYboekqoAXwN',
   redirectUri: 'http://localhost:8080/redirect',
   scope: 'openid profile',

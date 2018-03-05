@@ -89,7 +89,7 @@
 </code></pre><p><a href="https://travis-ci.org/ricokahler/oauth2-popup-flow"><img src="https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master" alt="Build Status"></a> <a href="https://coveralls.io/github/ricokahler/oauth2-popup-flow?branch=master"><img src="https://coveralls.io/repos/github/ricokahler/oauth2-popup-flow/badge.svg?branch=master" alt="Coverage Status"></a></p>
 				<h2 id="a-very-simple-oauth2-implicit-grant-flow-library-br-with-no-dependencies-that-uses-window-open-">A very simple oauth2 implicit grant flow library<br>with no dependencies that uses <code>window.open</code>.</h2>
 				<ul>
-					<li>Simplicity as a feature—only 193 SLOC.</li>
+					<li>Simplicity as a feature—only 187 SLOC.</li>
 					<li>No dependencies.</li>
 					<li>Easily integrates with React, Angular, Vue etc.</li>
 					<li>Never interrupt or reload the state of your client to login.</li>
@@ -141,7 +141,9 @@ auth.tryLoginPopup().then(<span class="hljs-function"><span class="hljs-params">
 <span class="hljs-keyword">const</span> loggedIn = auth.loggedIn();
 
 <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">someAsyncFunction</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-comment">// this calls `tryLoginPopup()` if there is no valid token in storage</span>
+  <span class="hljs-comment">// open the popup</span>
+  auth.tryLoginPopup();
+  <span class="hljs-comment">// await until authorized</span>
   <span class="hljs-keyword">const</span> token = <span class="hljs-keyword">await</span> auth.token();
 
   <span class="hljs-keyword">const</span> response = <span class="hljs-keyword">await</span> fetch(<span class="hljs-string">'https://example.com'</span>, {
@@ -153,8 +155,9 @@ auth.tryLoginPopup().then(<span class="hljs-function"><span class="hljs-params">
 }
 
 <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getInfoFromToken</span>(<span class="hljs-params"></span>) </span>{
-  <span class="hljs-comment">// this calls `tryLoginPopup()` if there is no valid token in storage</span>
-  <span class="hljs-comment">// returns the decoded payload of the token</span>
+  <span class="hljs-comment">// open the popup</span>
+  auth.tryLoginPopup();
+  <span class="hljs-comment">// returns the decoded payload of the token when authorized</span>
   <span class="hljs-keyword">const</span> payload = <span class="hljs-keyword">await</span> auth.tokenPayload();
   <span class="hljs-keyword">return</span> payload.username;
 }

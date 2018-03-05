@@ -27,7 +27,7 @@
 
 ## A very simple oauth2 implicit grant flow library<br>with no dependencies that uses `window.open`.
 
-* Simplicity as a feature—only 193 SLOC.
+* Simplicity as a feature—only 187 SLOC.
 * No dependencies.
 * Easily integrates with React, Angular, Vue etc.
 * Never interrupt or reload the state of your client to login.
@@ -84,7 +84,9 @@ auth.tryLoginPopup().then(result => {
 const loggedIn = auth.loggedIn();
 
 async function someAsyncFunction() {
-  // this calls `tryLoginPopup()` if there is no valid token in storage
+  // open the popup
+  auth.tryLoginPopup();
+  // await until authorized
   const token = await auth.token();
 
   const response = await fetch('https://example.com', {
@@ -96,8 +98,9 @@ async function someAsyncFunction() {
 }
 
 async function getInfoFromToken() {
-  // this calls `tryLoginPopup()` if there is no valid token in storage
-  // returns the decoded payload of the token
+  // open the popup
+  auth.tryLoginPopup();
+  // returns the decoded payload of the token when authorized
   const payload = await auth.tokenPayload();
   return payload.username;
 }

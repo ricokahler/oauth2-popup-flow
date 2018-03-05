@@ -371,10 +371,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
    * and wait until the user is `loggedIn()` (i.e. a new token has been added).
    */
   async token() {
-    if (!this.loggedIn()) {
-      this.tryLoginPopup();
-      await this.authenticated();
-    }
+    await this.authenticated();
     const token = this._rawToken;
     if (!token) {
       throw new Error('Token was falsy after being authenticated.');
@@ -387,10 +384,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
    * popup and wait until the user is `loggedIn()` (i.e. a new token has been added).
    */
   async tokenPayload() {
-    if (!this.loggedIn()) {
-      this.tryLoginPopup();
-      await this.authenticated();
-    }
+    await this.authenticated();
     const payload = this._rawTokenPayload;
     if (!payload) {
       throw new Error('Token payload was falsy after being authenticated.');

@@ -957,44 +957,6 @@ describe('OAuth2PopupFlow', () => {
   });
 
   describe('token', () => {
-    it('calls `tryLoginPopup` when not `loggedIn()`', async () => {
-      const storage = createTestStorage();
-
-      const options = {
-        authorizationUri: 'http://example.com/oauth/authorize',
-        clientId: 'some_test_client',
-        redirectUri: '',
-        scope: 'openid profile',
-        storage,
-      };
-
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-
-      expect(auth.loggedIn()).toBe(false);
-      spyOn(auth, 'loggedIn');
-      spyOn(auth, 'tryLoginPopup');
-      spyOn(auth, 'authenticated');
-
-      const examplePayload = {
-        foo: 'something',
-        bar: 5,
-        exp: Math.floor(new Date().getTime() / 1000) + 1000,
-      };
-      const exampleToken = [
-        'blah blah header',
-        window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
-      ].join('.');
-
-      storage._storage.token = exampleToken;
-
-      const token = await auth.token();
-
-      expect(token).toEqual(exampleToken);
-      expect(auth.loggedIn).toHaveBeenCalled();
-      expect(auth.tryLoginPopup).toHaveBeenCalled();
-      expect(auth.authenticated).toHaveBeenCalled();
-    });
     it('returns the `_rawToken` if `loggedIn()`', async () => {
       const storage = createTestStorage();
 
@@ -1039,8 +1001,6 @@ describe('OAuth2PopupFlow', () => {
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       expect(auth.loggedIn()).toBe(false);
-      spyOn(auth, 'loggedIn');
-      spyOn(auth, 'tryLoginPopup');
       spyOn(auth, 'authenticated');
 
       let catchCalled = false;
@@ -1051,51 +1011,12 @@ describe('OAuth2PopupFlow', () => {
         expect(e.message).toBe('Token was falsy after being authenticated.');
         catchCalled = true;
       } finally {
-        expect(auth.loggedIn).toHaveBeenCalled();
         expect(catchCalled).toBe(true);
       }
     });
   });
 
   describe('tokenPayload', () => {
-    it('calls `tryLoginPopup` when not `loggedIn()`', async () => {
-      const storage = createTestStorage();
-
-      const options = {
-        authorizationUri: 'http://example.com/oauth/authorize',
-        clientId: 'some_test_client',
-        redirectUri: '',
-        scope: 'openid profile',
-        storage,
-      };
-
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-
-      expect(auth.loggedIn()).toBe(false);
-      spyOn(auth, 'loggedIn');
-      spyOn(auth, 'tryLoginPopup');
-      spyOn(auth, 'authenticated');
-
-      const examplePayload = {
-        foo: 'something',
-        bar: 5,
-        exp: Math.floor(new Date().getTime() / 1000) + 1000,
-      };
-      const exampleToken = [
-        'blah blah header',
-        window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
-      ].join('.');
-
-      storage._storage.token = exampleToken;
-
-      const payload = await auth.tokenPayload();
-
-      expect(payload).toEqual(examplePayload);
-      expect(auth.loggedIn).toHaveBeenCalled();
-      expect(auth.tryLoginPopup).toHaveBeenCalled();
-      expect(auth.authenticated).toHaveBeenCalled();
-    });
     it('returns the `_rawToken` if `loggedIn()`', async () => {
       const storage = createTestStorage();
 
@@ -1140,8 +1061,6 @@ describe('OAuth2PopupFlow', () => {
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       expect(auth.loggedIn()).toBe(false);
-      spyOn(auth, 'loggedIn');
-      spyOn(auth, 'tryLoginPopup');
       spyOn(auth, 'authenticated');
 
       let catchCalled = false;
@@ -1152,7 +1071,6 @@ describe('OAuth2PopupFlow', () => {
         expect(e.message).toBe('Token payload was falsy after being authenticated.');
         catchCalled = true;
       } finally {
-        expect(auth.loggedIn).toHaveBeenCalled();
         expect(catchCalled).toBe(true);
       }
     });
