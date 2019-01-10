@@ -22,11 +22,11 @@
     "jasmine-spec-reporter": "^4.2.1",
     "jasmine-ts": "^0.2.1",
     "jsdom": "^11.6.2",
-    "nyc": "^11.4.1",
+    "nyc": "^13.1.0",
     "typedoc": "^0.10.0",
     "typescript": "^2.7.2",
-    "webpack": "^4.0.1",
-    "webpack-cli": "^2.0.9"
+    "webpack": "^4.28.4",
+    "webpack-cli": "^3.2.1"
   },
   "nyc": {
     "include": [
