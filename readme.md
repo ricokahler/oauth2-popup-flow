@@ -27,7 +27,7 @@
 
 ## A very simple oauth2 implicit grant flow library<br>with no dependencies that uses `window.open`.
 
-* Simplicity as a feature—only 187 SLOC.
+* Simplicity as a feature—only 189 SLOC.
 * No dependencies.
 * Easily integrates with React, Angular, Vue etc.
 * Never interrupt or reload the state of your client to login.
