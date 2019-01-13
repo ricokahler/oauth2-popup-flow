@@ -8,7 +8,7 @@ There are more than one way to approach integrating OAuth2 Popup Flow with React
 
 ```bash
 git clone https://github.com/ricokahler/oauth2-popup-flow.git
-cd oauth2-popup-flow/example/react-example
+cd oauth2-popup-flow/examples/react-example
 npm install
 npm start
 ```
