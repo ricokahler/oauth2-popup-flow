@@ -193,7 +193,7 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
   afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void;
 }
 
-export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
+export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements EventTarget {
   authorizationUri: string;
   clientId: string;
   redirectUri: string;
@@ -207,6 +207,29 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   tokenValidator?: (options: { payload: TokenPayload; token: string }) => boolean;
   beforePopup?: () => any | Promise<any>;
   afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void;
+
+  // copied and pasted from the `EventTarget` interface in `lib.dom`
+  /**
+   * supported events are `logout`
+   */
+  addEventListener: (
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options?: boolean | AddEventListenerOptions,
+  ) => void;
+  /**
+   * Dispatches a synthetic event event to target and returns true
+   * if either event's cancelable attribute value is false or its preventDefault() method was not invoked, and false otherwise.
+   */
+  dispatchEvent: (event: Event) => boolean;
+  /**
+   * Removes the event listener in target's event listener list with the same type, callback, and options.
+   */
+  removeEventListener: (
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: EventListenerOptions | boolean,
+  ) => void;
 
   constructor(options: OAuth2PopupFlowOptions<TokenPayload>) {
     this.authorizationUri = options.authorizationUri;
@@ -222,6 +245,11 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     this.tokenValidator = options.tokenValidator;
     this.beforePopup = options.beforePopup;
     this.afterResponse = options.afterResponse;
+
+    const eventTarget = new EventTarget();
+    this.addEventListener = eventTarget.addEventListener.bind(eventTarget);
+    this.dispatchEvent = eventTarget.dispatchEvent.bind(eventTarget);
+    this.removeEventListener = eventTarget.removeEventListener.bind(eventTarget);
   }
 
   private get _rawToken() {
@@ -289,6 +317,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
    */
   logout() {
     this.storage.removeItem(this.accessTokenStorageKey);
+    this.dispatchEvent(new Event('logout'));
   }
 
   /**
@@ -300,13 +329,13 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
    */
   handleRedirect() {
     const locationHref = window.location.href;
-    if (!locationHref.startsWith(this.redirectUri)) {
-      return 'REDIRECT_URI_MISMATCH';
-    }
+    if (!locationHref.startsWith(this.redirectUri)) return 'REDIRECT_URI_MISMATCH';
+
     const rawHash = window.location.hash;
     if (!rawHash) return 'FALSY_HASH';
     const hashMatch = /#(.*)/.exec(rawHash);
 
+    // this case won't happen because the browser typically adds the `#` always
     if (!hashMatch) return 'NO_HASH_MATCH';
     const hash = hashMatch[1];
 
@@ -318,7 +347,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
     if (!rawToken) return 'FALSY_TOKEN';
 
     this._rawToken = rawToken;
-    window.location.hash = '';
+  window.location.hash = '';
     return 'SUCCESS';
   }
 
@@ -329,18 +358,16 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
    * return `'SUCCESS'`.
    */
   async tryLoginPopup() {
-    if (this.loggedIn()) {
-      return 'ALREADY_LOGGED_IN';
-    }
+    if (this.loggedIn()) return 'ALREADY_LOGGED_IN';
 
     if (this.beforePopup) {
       await Promise.resolve(this.beforePopup());
     }
 
     const additionalParams =
-      /*if*/ typeof this.additionalAuthorizationParameters === 'function'
+      typeof this.additionalAuthorizationParameters === 'function'
         ? this.additionalAuthorizationParameters()
-        : /*if*/ typeof this.additionalAuthorizationParameters === 'object'
+        : typeof this.additionalAuthorizationParameters === 'object'
         ? this.additionalAuthorizationParameters
         : {};
 
@@ -353,12 +380,9 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
         ...additionalParams,
       })}`,
     );
-    if (!popup) {
-      return 'POPUP_FAILED';
-    }
+    if (!popup) return 'POPUP_FAILED';
 
     await this.authenticated();
-
     popup.close();
 
     return 'SUCCESS';
@@ -381,9 +405,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> {
   async token() {
     await this.authenticated();
     const token = this._rawToken;
-    if (!token) {
-      throw new Error('Token was falsy after being authenticated.');
-    }
+    if (!token) throw new Error('Token was falsy after being authenticated.');
     return token;
   }
 
