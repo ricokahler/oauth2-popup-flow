@@ -207,29 +207,9 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
   tokenValidator?: (options: { payload: TokenPayload; token: string }) => boolean;
   beforePopup?: () => any | Promise<any>;
   afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void;
-
-  // copied and pasted from the `EventTarget` interface in `lib.dom`
-  /**
-   * supported events are `logout`
-   */
-  addEventListener: (
-    type: string,
-    listener: EventListenerOrEventListenerObject | null,
-    options?: boolean | AddEventListenerOptions,
-  ) => void;
-  /**
-   * Dispatches a synthetic event event to target and returns true
-   * if either event's cancelable attribute value is false or its preventDefault() method was not invoked, and false otherwise.
-   */
-  dispatchEvent: (event: Event) => boolean;
-  /**
-   * Removes the event listener in target's event listener list with the same type, callback, and options.
-   */
-  removeEventListener: (
-    type: string,
-    callback: EventListenerOrEventListenerObject | null,
-    options?: EventListenerOptions | boolean,
-  ) => void;
+  private _eventListeners: {
+    [type: string]: EventListenerOrEventListenerObject[];
+  };
 
   constructor(options: OAuth2PopupFlowOptions<TokenPayload>) {
     this.authorizationUri = options.authorizationUri;
@@ -245,11 +225,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
     this.tokenValidator = options.tokenValidator;
     this.beforePopup = options.beforePopup;
     this.afterResponse = options.afterResponse;
-
-    const eventTarget = new EventTarget();
-    this.addEventListener = eventTarget.addEventListener.bind(eventTarget);
-    this.dispatchEvent = eventTarget.dispatchEvent.bind(eventTarget);
-    this.removeEventListener = eventTarget.removeEventListener.bind(eventTarget);
+    this._eventListeners = {};
   }
 
   private get _rawToken() {
@@ -314,6 +290,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
 
   /**
    * Deletes the token from the given storage causing `loggedIn` to return false on its next call.
+   * Also dispatches `logout` event
    */
   logout() {
     this.storage.removeItem(this.accessTokenStorageKey);
@@ -347,8 +324,46 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
     if (!rawToken) return 'FALSY_TOKEN';
 
     this._rawToken = rawToken;
-  window.location.hash = '';
+    window.location.hash = '';
     return 'SUCCESS';
+  }
+
+  /**
+   * supported events are:
+   *
+   * 1. `logout`–fired when the `logout()` method is called and
+   * 2. `login`–fired during the `tryLoginPopup()` method is called and succeeds
+   */
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject) {
+    const listeners = this._eventListeners[type] || [];
+    listeners.push(listener);
+    this._eventListeners[type] = listeners;
+  }
+
+  /**
+   * Use this to dispatch an event to the internal `EventTarget`
+   */
+  dispatchEvent(event: Event) {
+    const listeners = this._eventListeners[event.type] || [];
+    for (const listener of listeners) {
+      const dispatch =
+        typeof listener === 'function'
+          ? listener
+          : typeof listener === 'object' && typeof listener.handleEvent === 'function'
+          ? listener.handleEvent.bind(listener)
+          : () => {};
+
+      dispatch(event);
+    }
+    return true;
+  }
+
+  /**
+   * Removes the event listener in target's event listener list with the same type, callback, and options.
+   */
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject) {
+    const listeners = this._eventListeners[type] || [];
+    this._eventListeners[type] = listeners.filter(l => l !== listener);
   }
 
   /**
@@ -356,6 +371,8 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
    * immediately return `'ALREADY_LOGGED_IN'`. If the popup fails to open, it will immediately
    * return `'POPUP_FAILED'` else it will wait for `loggedIn()` to be `true` and eventually
    * return `'SUCCESS'`.
+   *
+   * Also dispatches `login` event
    */
   async tryLoginPopup() {
     if (this.loggedIn()) return 'ALREADY_LOGGED_IN';
@@ -384,6 +401,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
 
     await this.authenticated();
     popup.close();
+    this.dispatchEvent(new Event('login'));
 
     return 'SUCCESS';
   }

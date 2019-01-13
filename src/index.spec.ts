@@ -1,9 +1,41 @@
 import { OAuth2PopupFlow } from './';
 
+export class DeferredPromise<T> implements Promise<T> {
+  private _promise: Promise<T>;
+  resolve!: (t?: T) => void;
+  reject!: (error?: any) => void;
+  then: <TResult1 = T, TResult2 = never>(
+    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+  ) => Promise<TResult1 | TResult2>;
+  catch: <TResult = never>(
+    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null,
+  ) => Promise<T | TResult>;
+  state: 'pending' | 'fulfilled' | 'rejected';
+
+  constructor() {
+    this.state = 'pending';
+    this._promise = new Promise((resolve, reject) => {
+      this.resolve = (value?: T | PromiseLike<T> | undefined) => {
+        this.state = 'fulfilled';
+        resolve(value);
+      };
+      this.reject = (reason: any) => {
+        this.state = 'rejected';
+        reject(reason);
+      };
+    });
+    this.then = this._promise.then.bind(this._promise) as any;
+    this.catch = this._promise.catch.bind(this._promise) as any;
+  }
+
+  [Symbol.toStringTag] = 'Promise' as 'Promise';
+}
+
 interface ExampleTokenPayload {
-  exp: number,
-  foo: string,
-  bar: number,
+  exp: number;
+  foo: string;
+  bar: number;
 }
 
 function createTestStorage() {
@@ -17,8 +49,12 @@ function createTestStorage() {
     getItem: (key: string) => _storage[key] || null,
     key: (index: number) => Object.keys(_storage)[index] || null,
     length: Object.keys(_storage).length,
-    removeItem: (key: string) => { delete _storage[key]; },
-    setItem: (key: string, value: string) => { _storage[key] = value; },
+    removeItem: (key: string) => {
+      delete _storage[key];
+    },
+    setItem: (key: string, value: string) => {
+      _storage[key] = value;
+    },
     _storage,
   };
 }
@@ -27,7 +63,7 @@ describe('OAuth2PopupFlow', () => {
   describe('jsonParseOrUndefined', () => {
     it('returns parsed JSON when valid', () => {
       const validJson = '{"a": "some value", "b": 5}';
-      const parsed = OAuth2PopupFlow.jsonParseOrUndefined<{ a: string, b: number }>(validJson)!;
+      const parsed = OAuth2PopupFlow.jsonParseOrUndefined<{ a: string; b: number }>(validJson)!;
       expect(parsed).toBeDefined();
       expect(parsed.a).toBe('some value');
       expect(parsed.b).toBe(5);
@@ -45,16 +81,10 @@ describe('OAuth2PopupFlow', () => {
         return new Promise<5>(resolve => setTimeout(() => resolve(5), 5));
       }
 
-      const race = await Promise.race([
-        OAuth2PopupFlow.time(10),
-        fiveMilliseconds(),
-      ]);
+      const race = await Promise.race([OAuth2PopupFlow.time(10), fiveMilliseconds()]);
       expect(race).toBe(5);
 
-      const otherRace = await Promise.race([
-        OAuth2PopupFlow.time(0),
-        fiveMilliseconds(),
-      ]);
+      const otherRace = await Promise.race([OAuth2PopupFlow.time(0), fiveMilliseconds()]);
       expect(otherRace).toBe('TIMER');
     });
   });
@@ -89,12 +119,12 @@ describe('OAuth2PopupFlow', () => {
 
   describe('constructor', () => {
     it('creates instances from the `OAuth2PopupFlowOptions` object', () => {
-      function beforePopup() { }
-      function afterResponse() { }
+      function beforePopup() {}
+      function afterResponse() {}
       function tokenValidator() {
         return true;
       }
-      const additionalAuthorizationParameters = { foo: 'bar', };
+      const additionalAuthorizationParameters = { foo: 'bar' };
 
       const storage = createTestStorage();
 
@@ -226,7 +256,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = null;
       expect(auth['_rawToken']).toBeUndefined();
     });
-    it('doesn\'t allow `null` or `undefined` to be assigned to storage but allows strings', () => {
+    it("doesn't allow `null` or `undefined` to be assigned to storage but allows strings", () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow({
@@ -274,7 +304,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = '';
       expect(auth['_rawTokenPayload']).toBeUndefined();
     });
-    it('returns `undefined` if it couldn\'t find the encoded payload in the token', () => {
+    it("returns `undefined` if it couldn't find the encoded payload in the token", () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow({
@@ -288,7 +318,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = 'non-proper JWT';
       expect(auth['_rawTokenPayload']).toBeUndefined();
     });
-    it('returns `undefined` if it couldn\'t parse the JSON in the encoded payload', () => {
+    it("returns `undefined` if it couldn't parse the JSON in the encoded payload", () => {
       const storage = createTestStorage();
 
       const auth = new OAuth2PopupFlow({
@@ -302,7 +332,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = [
         'non proper JWT',
         'this is the payload section',
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
 
       expect(auth['_rawTokenPayload']).toBeUndefined();
@@ -327,7 +357,7 @@ describe('OAuth2PopupFlow', () => {
       storage._storage.token = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
 
       expect(auth['_rawTokenPayload']).toEqual(examplePayload);
@@ -360,7 +390,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -393,7 +423,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -426,7 +456,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -450,7 +480,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -474,7 +504,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -516,7 +546,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -540,7 +570,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -564,7 +594,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -591,7 +621,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -610,7 +640,7 @@ describe('OAuth2PopupFlow', () => {
   });
 
   describe('handleRedirect', () => {
-    it('returns early with `REDIRECT_URI_MISMATCH` if location doesn\'t match the redirect', () => {
+    it("returns early with `REDIRECT_URI_MISMATCH` if location doesn't match the redirect", () => {
       const storage = createTestStorage();
 
       const options = {
@@ -684,7 +714,7 @@ describe('OAuth2PopupFlow', () => {
         afterResponse: (obj: { [key: string]: string | undefined }) => {
           expect(obj).toEqual(objectToEncode);
           afterResponseCalled = true;
-        }
+        },
       };
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
@@ -748,7 +778,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
       storage._storage.token = exampleToken;
 
@@ -765,7 +795,7 @@ describe('OAuth2PopupFlow', () => {
       expect(auth.loggedIn()).toBe(true);
       expect(await auth.tryLoginPopup()).toBe('ALREADY_LOGGED_IN');
     });
-    it('doesn\'t call `beforePopup` if it doesn\'t exist', async () => {
+    it("doesn't call `beforePopup` if it doesn't exist", async () => {
       const storage = createTestStorage();
 
       (window as any).open = () => undefined;
@@ -849,9 +879,9 @@ describe('OAuth2PopupFlow', () => {
         storage,
         additionalAuthorizationParameters: () => {
           return {
-            foo: 'bar'
+            foo: 'bar',
           };
-        }
+        },
       };
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
@@ -882,10 +912,11 @@ describe('OAuth2PopupFlow', () => {
       expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
       expect(openCalled).toBe(true);
     });
-    it('returns `SUCCESS` and calls `close` on the popup', async () => {
+    it('returns `SUCCESS` and calls `close` on the popup and fires and event', async () => {
       const storage = createTestStorage();
 
       let closedCalled = false;
+      const eventCalled = new DeferredPromise();
 
       (window as any).open = () => ({
         close: () => {
@@ -909,17 +940,19 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      auth.addEventListener('login', eventCalled.resolve);
       OAuth2PopupFlow.time(0).then(() => {
         storage._storage.token = exampleToken;
-      })
+      });
 
       expect(auth.loggedIn()).toBe(false);
       expect(await auth.tryLoginPopup()).toBe('SUCCESS');
       expect(closedCalled).toBe(true);
+      await eventCalled;
     });
   });
 
@@ -943,7 +976,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
@@ -979,7 +1012,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
 
       storage._storage.token = exampleToken;
@@ -1039,7 +1072,7 @@ describe('OAuth2PopupFlow', () => {
       const exampleToken = [
         'blah blah header',
         window.btoa(JSON.stringify(examplePayload)),
-        'this is the signature section'
+        'this is the signature section',
       ].join('.');
 
       storage._storage.token = exampleToken;
@@ -1074,6 +1107,119 @@ describe('OAuth2PopupFlow', () => {
       } finally {
         expect(catchCalled).toBe(true);
       }
+    });
+  });
+
+  describe('EventTarget', () => {
+    it('allows events to be listened to and dispatched', () => {
+      const storage = createTestStorage();
+
+      const options = {
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const handler = jest.fn();
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      auth.addEventListener('login', handler);
+      auth.dispatchEvent(new Event('login'));
+      auth.dispatchEvent(new Event('login'));
+      auth.dispatchEvent(new Event('login'));
+
+      expect(handler).toBeCalledTimes(3);
+    });
+
+    it('allows event listeners to be removed', () => {
+      const storage = createTestStorage();
+      const handler = jest.fn();
+
+      const options = {
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      auth.addEventListener('login', handler);
+      auth.dispatchEvent(new Event('login'));
+      auth.dispatchEvent(new Event('login'));
+      auth.dispatchEvent(new Event('login'));
+
+      auth.removeEventListener('login', handler);
+      auth.dispatchEvent(new Event('login'));
+
+      expect(handler).toBeCalledTimes(3);
+    });
+
+    it("doesn't throw when the type of event doesn't exist", () => {
+      const storage = createTestStorage();
+
+      const options = {
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      auth.removeEventListener('login', () => {});
+    });
+
+    it('allows for an event handler object', () => {
+      const storage = createTestStorage();
+
+      const options = {
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const handler = jest.fn();
+
+      const eventListenerObject = {
+        handleEvent: handler,
+      };
+
+      auth.addEventListener('login', eventListenerObject);
+      auth.dispatchEvent(new Event('login'));
+      auth.dispatchEvent(new Event('login'));
+      auth.dispatchEvent(new Event('login'));
+
+      expect(handler).toBeCalledTimes(3);
+    });
+
+    it('defaults to a no-op when there is nothing callable', () => {
+      const storage = createTestStorage();
+
+      const options = {
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: '',
+        scope: 'openid profile',
+        storage,
+      };
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const handler = jest.fn();
+
+      const notRealObj = {};
+
+      auth.addEventListener('login', notRealObj as any);
+      auth.dispatchEvent(new Event('login'));
+      auth.dispatchEvent(new Event('login'));
+      auth.dispatchEvent(new Event('login'));
+
+      expect(handler).toBeCalledTimes(0);
     });
   });
 });
