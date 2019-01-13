@@ -1,4 +1,4 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app). This
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 # OAuth2 Popup Flow–React and React-Router Example
 
