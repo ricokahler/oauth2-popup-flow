@@ -1,63 +1,67 @@
 ```
-  ____               _   _     ___  
- / __ \   /\        | | | |   |__ \ 
+  ____               _   _     ___
+ / __ \   /\        | | | |   |__ \
 | |  | | /  \  _   _| |_| |__    ) |
-| |  | |/ /\ \| | | | __| '_ \  / / 
-| |__| / ____ \ |_| | |_| | | |/ /_ 
+| |  | |/ /\ \| | | | __| '_ \  / /
+| |__| / ____ \ |_| | |_| | | |/ /_
  \____/_/    \_\__,_|\__|_| |_|____|
-                                        
-                           /$$$$$$$                                        
-                          | $$__  $$                                       
-                          | $$  \ $$ /$$$$$$   /$$$$$$  /$$   /$$  /$$$$$$ 
+
+                           /$$$$$$$
+                          | $$__  $$
+                          | $$  \ $$ /$$$$$$   /$$$$$$  /$$   /$$  /$$$$$$
                           | $$$$$$$//$$__  $$ /$$__  $$| $$  | $$ /$$__  $$
                           | $$____/| $$  \ $$| $$  \ $$| $$  | $$| $$  \ $$
                           | $$     | $$  | $$| $$  | $$| $$  | $$| $$  | $$
                           | $$     |  $$$$$$/| $$$$$$$/|  $$$$$$/| $$$$$$$/
-                          |__/      \______/ | $$____/  \______/ | $$____/ 
-                                             | $$                | $$      
-                                             | $$                | $$      ______ _               
-                                             |__/                |__/     |  ____| |              
+                          |__/      \______/ | $$____/  \______/ | $$____/
+                                             | $$                | $$
+                                             | $$                | $$      ______ _
+                                             |__/                |__/     |  ____| |
                                                                           | |__  | | _____      __
                                                                           |  __| | |/ _ \ \ /\ / /
-                                                                          | |    | | (_) \ V  V / 
-                                                                          |_|    |_|\___/ \_/\_/  
+                                                                          | |    | | (_) \ V  V /
+                                                                          |_|    |_|\___/ \_/\_/
 ```
 
 [![Build Status](https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master)](https://travis-ci.org/ricokahler/oauth2-popup-flow) [![Coverage Status](https://coveralls.io/repos/github/ricokahler/oauth2-popup-flow/badge.svg?branch=master)](https://coveralls.io/github/ricokahler/oauth2-popup-flow?branch=master)
 
-## A very simple oauth2 implicit grant flow library<br>with no dependencies that uses `window.open`.
+### A very simple oauth2 implicit grant flow library<br>with no dependencies that uses `window.open`.
 
-* Simplicity as a feature—only 189 SLOC.
-* No dependencies.
-* Easily integrates with React, Angular, Vue etc.
-* Never interrupt or reload the state of your client to login.
-* To get a token, call `oauth2PopupFlow.token()` which returns a `Promise<string>` of the token.
-* To get the payload, call `oauth2PopupFlow.tokenPayload()` which returns a `Promise<TokenPayload>`.
-* Statically typed API via Typescript for use within Javascript or Typescript.
+- Simplicity as a feature—only 209 SLOC.
+- No dependencies.
+- Easily integrates with React, Angular, Vue etc.
+- Never interrupt or reload the state of your client to login.
+- To get a token, call `oauth2PopupFlow.token()` which returns a `Promise<string>` of the token.
+- To get the payload, call `oauth2PopupFlow.tokenPayload()` which returns a `Promise<TokenPayload>`.
+- Statically typed API via Typescript for use within Javascript or Typescript.
 
-## Why the popup?
+### Why the popup?
 
 If the user isn't logged in, the typical OAuth2 implicit grant flow forwards the user to the authorization server's login page (separate from your app) and then redirects them back. The issue with this is that it requires the app to be reloaded in order to grab a token. This reload complicates your application and may result in lost work due to the app reloading.
 
-The popup is a simple solution that allows the 9e load the hosted login page that keep the state of your application.
+The popup is a simple solution that allows the user to load the hosted login page and come back to your app while keeping the state of your application.
 
-## This library is great if:
+### This library is great if:
 
-* You already use the implicit grant
-* Your authorization server typically doesn't prompt the user to login
-* You want the user to automatically be logged in and authenticated in your application
+- You already use the implicit grant
+- Your authorization server typically doesn't prompt the user to login
+- You want the user to automatically be logged in and authenticated in your application
 
-# Usage
+## Usage
+
+```
+npm install --save oauth2-popup-flow
+```
 
 ```ts
 import { OAuth2PopupFlow } from 'oauth2-popup-flow';
 
 // create a type for the payload of the token
 interface TokenPayload {
-  exp: number,
-  other: string,
-  stuff: string,
-  username: string,
+  exp: number;
+  other: string;
+  stuff: string;
+  username: string;
 }
 
 // create an instance of `OAuth2PopupFlow`
@@ -111,14 +115,14 @@ getInfoFromToken().then(username => console.log({ username }));
 
 [Check out the API docs for more info](https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html)
 
-## Examples (WIP)
+### Examples (work-in-progress, contributions welcome)
 
-* [No framework](./examples/vanilla)
-* [Angular](./examples/angular)
-* [React + React Router](./examples/react)
+- [No framework](./examples/vanilla)
+- [Angular](./examples/angular)
+- [React + React Router](./examples/react-example)
 
-## Requirements
+### Requirements
 
-* [`String.prototype.startsWith`][0] (you may need a polyfill if you're targeting IE etc)
+- [`String.prototype.startsWith`][0] (you may need a polyfill if you're targeting IE etc)
 
 [0]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/startsWith

@@ -13,6 +13,12 @@ npm install
 npm start
 ```
 
+### Installation instructions
+
+```
+npm install --save oauth2-popup-flow
+```
+
 ## How it works
 
 ### Review of the implicit grant/flow with a popup:
