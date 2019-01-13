@@ -5,7 +5,7 @@
   "main": "./dist/oauth2-popup-flow.js",
   "typings": "./src/index.ts",
   "scripts": {
-    "test": "nyc jasmine-ts \"src/**/*.spec.ts\" | coveralls",
+    "test": "jest",
     "build": "webpack -p",
     "docs": "typedoc --out docs/ src/"
   },
@@ -16,30 +16,16 @@
     "url": "https://github.com/ricokahler/oauth2-popup-flow.git"
   },
   "devDependencies": {
-    "@types/jasmine": "^2.8.6",
+    "@types/jest": "^23.3.12",
     "awesome-typescript-loader": "^3.5.0",
     "coveralls": "^3.0.0",
-    "jasmine-spec-reporter": "^4.2.1",
-    "jasmine-ts": "^0.2.1",
-    "jsdom": "^11.6.2",
-    "nyc": "^13.1.0",
+    "jest": "^23.6.0",
+    "jsdom": "^13.1.0",
+    "ts-jest": "^23.10.5",
     "typedoc": "^0.10.0",
-    "typescript": "^2.7.2",
+    "typescript": "^3.2.2",
     "webpack": "^4.28.4",
     "webpack-cli": "^3.2.1"
   },
-  "nyc": {
-    "include": [
-      "src/**/*.ts"
-    ],
-    "exclude": [
-      "src/**/*.spec.ts"
-    ],
-    "reporter": [
-      "text-lcov"
-    ],
-    "extension": [
-      ".ts"
-    ]
-  }
+  "dependencies": {}
 }
