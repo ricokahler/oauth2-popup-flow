@@ -165,6 +165,15 @@ auth.tryLoginPopup().then(<span class="hljs-function"><span class="hljs-params">
 
 someAsyncFunction();
 getInfoFromToken().then(<span class="hljs-function"><span class="hljs-params">username</span> =&gt;</span> <span class="hljs-built_in">console</span>.log({ username }));
+
+<span class="hljs-comment">// also implements EventTarget so you can add event listeners for `login` and `logout`</span>
+auth.addEventListener(<span class="hljs-string">'login'</span>, <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'user was logged in'</span>);
+});
+
+auth.addEventListener(<span class="hljs-string">'logout'</span>, <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'user was logged out'</span>);
+});
 </code></pre>
 				<p><a href="https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html">Check out the API docs for more info</a></p>
 				<h3 id="examples-work-in-progress-contributions-welcome-">Examples (work-in-progress, contributions welcome)</h3>

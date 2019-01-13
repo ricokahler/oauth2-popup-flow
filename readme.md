@@ -111,6 +111,15 @@ async function getInfoFromToken() {
 
 someAsyncFunction();
 getInfoFromToken().then(username => console.log({ username }));
+
+// also implements EventTarget so you can add event listeners for `login` and `logout`
+auth.addEventListener('login', () => {
+  console.log('user was logged in');
+});
+
+auth.addEventListener('logout', () => {
+  console.log('user was logged out');
+});
 ```
 
 [Check out the API docs for more info](https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html)
