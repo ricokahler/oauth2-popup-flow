@@ -45,5 +45,7 @@ The key files to look at are:
 2. [App.js](./src/App.js)–manages top-level routing
 3. [AuthenticatedRoute.js](./src/AuthenticatedRoute.js)–the authenticated route
 4. [UnauthenticatedRoute.js](./src/UnauthenticatedRoute.js)–the unauthenticated route/login call to action
+5. [Redirect.js](./src/Redirect.js)–handles the redirect from the authorization server.
+
 
 Enjoy!
