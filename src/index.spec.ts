@@ -637,6 +637,36 @@ describe('OAuth2PopupFlow', () => {
       auth.logout();
       expect(auth.loggedIn()).toBe(false);
     });
+
+    it('should dispatch a logout event', () => {
+      const storage = createTestStorage();
+      const examplePayload = {
+        foo: 'something',
+        bar: 5,
+        exp: Math.floor(new Date().getTime() / 1000) + 1000,
+      };
+      const exampleToken = [
+        'blah blah header',
+        window.btoa(JSON.stringify(examplePayload)),
+        'this is the signature section',
+      ].join('.');
+      storage._storage.token = exampleToken;
+
+      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+        authorizationUri: 'http://example.com/oauth/authorize',
+        clientId: 'some_test_client',
+        redirectUri: 'http://localhost:8080/redirect',
+        scope: 'openid profile',
+        storage,
+      });
+      const handler = jest.fn();
+      auth.addEventListener('logout', handler);
+
+      expect(auth.loggedIn()).toBe(true);
+      auth.logout();
+      expect(auth.loggedIn()).toBe(false);
+      expect(handler).toBeCalledTimes(1);
+    });
   });
 
   describe('handleRedirect', () => {
