@@ -5,7 +5,7 @@
   "main": "./dist/oauth2-popup-flow.js",
   "typings": "./src/index.ts",
   "scripts": {
-    "test": "jest",
+    "test": "jest --coverage --coverageReporters=text-lcov | coveralls",
     "build": "webpack -p",
     "docs": "typedoc --out docs/ src/"
   },
