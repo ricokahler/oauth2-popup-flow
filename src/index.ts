@@ -246,7 +246,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
     const encodedPayload = tokenSplit[1];
     if (!encodedPayload) return undefined;
 
-    const decodedPayloadJson = window.atob(encodedPayload);
+    const decodedPayloadJson = window.atob(encodedPayload.replace('-', '+').replace('_', '/'));
     const decodedPayload = OAuth2PopupFlow.jsonParseOrUndefined<TokenPayload>(decodedPayloadJson);
     return decodedPayload;
   }
