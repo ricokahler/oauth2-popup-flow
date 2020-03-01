@@ -16,7 +16,7 @@
     "url": "https://github.com/ricokahler/oauth2-popup-flow.git"
   },
   "devDependencies": {
-    "@types/jest": "^23.3.12",
+    "@types/jest": "^25.1.3",
     "awesome-typescript-loader": "^3.5.0",
     "coveralls": "^3.0.0",
     "jest": "^23.6.0",
