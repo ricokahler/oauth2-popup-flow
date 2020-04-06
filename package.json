@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@types/jest": "^23.3.12",
-    "awesome-typescript-loader": "^3.5.0",
+    "awesome-typescript-loader": "^5.2.1",
     "coveralls": "^3.0.0",
     "jest": "^23.6.0",
     "jsdom": "^13.1.0",
