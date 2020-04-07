@@ -2,15 +2,13 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
-    "lib": [
-      "dom",
-      "es2015"
-    ],
+    "lib": ["dom", "es2015"],
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist"
   },
-  "exclude": [
-    "./examples"
-  ]
+  "exclude": ["./examples/**/*", "**/*.test.ts"]
 }

@@ -1,8 +1,0 @@
-node_modules
-.nyc_output
-examples
-docs
-spec
-webpack.config.js
-.coveralls.yml
-.travis.yml
