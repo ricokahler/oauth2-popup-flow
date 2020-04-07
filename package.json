@@ -1,13 +1,14 @@
 {
   "name": "oauth2-popup-flow",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A very simple oauth2 implicit flow library that uses window.open.",
-  "main": "./dist/oauth2-popup-flow.js",
-  "typings": "./src/index.ts",
+  "main": "./index.js",
+  "module": "./index.esm.js",
+  "sideEffects": false,
   "scripts": {
-    "test": "jest --coverage --coverageReporters=text-lcov | coveralls",
-    "build": "webpack -p",
-    "docs": "typedoc --out docs/ src/"
+    "test": "jest",
+    "build": "rm -rf dist && tsc && rollup -c && cp package.json ./dist",
+    "docs": "rm -rf docs && typedoc --out ./docs ./src/index.ts"
   },
   "author": "Rico Kahler",
   "license": "MIT",
@@ -16,16 +17,16 @@
     "url": "https://github.com/ricokahler/oauth2-popup-flow.git"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.9.0",
+    "@babel/preset-typescript": "^7.9.0",
+    "@rollup/plugin-typescript": "^4.0.0",
     "@types/jest": "^25.1.4",
-    "awesome-typescript-loader": "^3.5.0",
-    "coveralls": "^3.0.0",
-    "jest": "^23.6.0",
+    "jest": "^25.2.7",
     "jsdom": "^13.1.0",
-    "ts-jest": "^23.10.5",
-    "typedoc": "^0.10.0",
-    "typescript": "^3.2.2",
-    "webpack": "^4.28.4",
-    "webpack-cli": "^3.2.1"
+    "rollup": "^2.3.3",
+    "tslib": "^1.11.1",
+    "typedoc": "^0.17.4",
+    "typescript": "^3.8.3"
   },
   "dependencies": {}
 }

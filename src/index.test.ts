@@ -1,37 +1,5 @@
 import { OAuth2PopupFlow } from './';
 
-export class DeferredPromise<T> implements Promise<T> {
-  private _promise: Promise<T>;
-  resolve!: (t?: T) => void;
-  reject!: (error?: any) => void;
-  then: <TResult1 = T, TResult2 = never>(
-    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
-  ) => Promise<TResult1 | TResult2>;
-  catch: <TResult = never>(
-    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null,
-  ) => Promise<T | TResult>;
-  state: 'pending' | 'fulfilled' | 'rejected';
-
-  constructor() {
-    this.state = 'pending';
-    this._promise = new Promise((resolve, reject) => {
-      this.resolve = (value?: T | PromiseLike<T> | undefined) => {
-        this.state = 'fulfilled';
-        resolve(value);
-      };
-      this.reject = (reason: any) => {
-        this.state = 'rejected';
-        reject(reason);
-      };
-    });
-    this.then = this._promise.then.bind(this._promise) as any;
-    this.catch = this._promise.catch.bind(this._promise) as any;
-  }
-
-  [Symbol.toStringTag] = 'Promise' as 'Promise';
-}
-
 interface ExampleTokenPayload {
   exp: number;
   foo: string;
@@ -63,7 +31,10 @@ describe('OAuth2PopupFlow', () => {
   describe('jsonParseOrUndefined', () => {
     it('returns parsed JSON when valid', () => {
       const validJson = '{"a": "some value", "b": 5}';
-      const parsed = OAuth2PopupFlow.jsonParseOrUndefined<{ a: string; b: number }>(validJson)!;
+      const parsed = OAuth2PopupFlow.jsonParseOrUndefined<{
+        a: string;
+        b: number;
+      }>(validJson)!;
       expect(parsed).toBeDefined();
       expect(parsed.a).toBe('some value');
       expect(parsed.b).toBe(5);
@@ -78,13 +49,19 @@ describe('OAuth2PopupFlow', () => {
   describe('time', () => {
     it('calls `setTimeout` and returns `TIMER`', async () => {
       function fiveMilliseconds() {
-        return new Promise<5>(resolve => setTimeout(() => resolve(5), 5));
+        return new Promise<5>((resolve) => setTimeout(() => resolve(5), 5));
       }
 
-      const race = await Promise.race([OAuth2PopupFlow.time(10), fiveMilliseconds()]);
+      const race = await Promise.race([
+        OAuth2PopupFlow.time(10),
+        fiveMilliseconds(),
+      ]);
       expect(race).toBe(5);
 
-      const otherRace = await Promise.race([OAuth2PopupFlow.time(0), fiveMilliseconds()]);
+      const otherRace = await Promise.race([
+        OAuth2PopupFlow.time(0),
+        fiveMilliseconds(),
+      ]);
       expect(otherRace).toBe('TIMER');
     });
   });
@@ -148,7 +125,9 @@ describe('OAuth2PopupFlow', () => {
 
       expect(auth.accessTokenResponseKey).toBe(options.accessTokenResponseKey);
       expect(auth.accessTokenStorageKey).toBe(options.accessTokenStorageKey);
-      expect(auth.additionalAuthorizationParameters).toBe(additionalAuthorizationParameters);
+      expect(auth.additionalAuthorizationParameters).toBe(
+        additionalAuthorizationParameters,
+      );
       expect(auth.authorizationUri).toBe(options.authorizationUri);
       expect(auth.beforePopup).toBe(beforePopup);
       expect(auth.clientId).toBe(options.clientId);
@@ -748,7 +727,9 @@ describe('OAuth2PopupFlow', () => {
       };
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-      window.location.hash = `#${OAuth2PopupFlow.encodeObjectToUri(objectToEncode)}`;
+      window.location.hash = `#${OAuth2PopupFlow.encodeObjectToUri(
+        objectToEncode,
+      )}`;
 
       const result = auth.handleRedirect();
       expect(result).toBe('SUCCESS');
@@ -946,7 +927,8 @@ describe('OAuth2PopupFlow', () => {
       const storage = createTestStorage();
 
       let closedCalled = false;
-      const eventCalled = new DeferredPromise();
+      let resolve!: () => void;
+      const eventCalled = new Promise((thisResolve) => (resolve = thisResolve));
 
       (window as any).open = () => ({
         close: () => {
@@ -974,7 +956,7 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
 
       const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-      auth.addEventListener('login', eventCalled.resolve);
+      auth.addEventListener('login', resolve);
       OAuth2PopupFlow.time(0).then(() => {
         storage._storage.token = exampleToken;
       });
@@ -1132,7 +1114,9 @@ describe('OAuth2PopupFlow', () => {
       try {
         await auth.tokenPayload();
       } catch (e) {
-        expect(e.message).toBe('Token payload was falsy after being authenticated.');
+        expect(e.message).toBe(
+          'Token payload was falsy after being authenticated.',
+        );
         catchCalled = true;
       } finally {
         expect(catchCalled).toBe(true);

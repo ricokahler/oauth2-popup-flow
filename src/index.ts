@@ -138,7 +138,9 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
    *
    * [0]: https://auth0.com/docs/api-auth/tutorials/nonce#generate-a-cryptographically-random-nonce
    */
-  additionalAuthorizationParameters?: (() => { [key: string]: string }) | { [key: string]: string };
+  additionalAuthorizationParameters?:
+    | (() => { [key: string]: string })
+    | { [key: string]: string };
   /**
    * OPTIONAL
    * This function intercepts the `loggedIn` method and causes it to return early with `false` if
@@ -174,7 +176,10 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
    *
    * [0]: https://auth0.com/docs/api-auth/tutorials/nonce#generate-a-cryptographically-random-nonce
    */
-  tokenValidator?: (options: { payload: TokenPayload; token: string }) => boolean;
+  tokenValidator?: (options: {
+    payload: TokenPayload;
+    token: string;
+  }) => boolean;
   /**
    * OPTIONAL
    * A hook that runs in `tryLoginPopup` before any popup is opened. This function can return a
@@ -190,10 +195,13 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
    * authorization server. Use this hook to grab more from the response or to debug the response
    * from the authorization URL.
    */
-  afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void;
+  afterResponse?: (authorizationResponse: {
+    [key: string]: string | undefined;
+  }) => void;
 }
 
-export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements EventTarget {
+export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
+  implements EventTarget {
   authorizationUri: string;
   clientId: string;
   redirectUri: string;
@@ -203,10 +211,17 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
   accessTokenResponseKey: string;
   storage: Storage;
   pollingTime: number;
-  additionalAuthorizationParameters?: (() => { [key: string]: string }) | { [key: string]: string };
-  tokenValidator?: (options: { payload: TokenPayload; token: string }) => boolean;
+  additionalAuthorizationParameters?:
+    | (() => { [key: string]: string })
+    | { [key: string]: string };
+  tokenValidator?: (options: {
+    payload: TokenPayload;
+    token: string;
+  }) => boolean;
   beforePopup?: () => any | Promise<any>;
-  afterResponse?: (authorizationResponse: { [key: string]: string | undefined }) => void;
+  afterResponse?: (authorizationResponse: {
+    [key: string]: string | undefined;
+  }) => void;
   private _eventListeners: {
     [type: string]: EventListenerOrEventListenerObject[];
   };
@@ -218,10 +233,12 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
     this.scope = options.scope;
     this.responseType = options.responseType || 'token';
     this.accessTokenStorageKey = options.accessTokenStorageKey || 'token';
-    this.accessTokenResponseKey = options.accessTokenResponseKey || 'access_token';
+    this.accessTokenResponseKey =
+      options.accessTokenResponseKey || 'access_token';
     this.storage = options.storage || window.localStorage;
     this.pollingTime = options.pollingTime || 200;
-    this.additionalAuthorizationParameters = options.additionalAuthorizationParameters;
+    this.additionalAuthorizationParameters =
+      options.additionalAuthorizationParameters;
     this.tokenValidator = options.tokenValidator;
     this.beforePopup = options.beforePopup;
     this.afterResponse = options.afterResponse;
@@ -246,8 +263,12 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
     const encodedPayload = tokenSplit[1];
     if (!encodedPayload) return undefined;
 
-    const decodedPayloadJson = window.atob(encodedPayload.replace('-', '+').replace('_', '/'));
-    const decodedPayload = OAuth2PopupFlow.jsonParseOrUndefined<TokenPayload>(decodedPayloadJson);
+    const decodedPayloadJson = window.atob(
+      encodedPayload.replace('-', '+').replace('_', '/'),
+    );
+    const decodedPayload = OAuth2PopupFlow.jsonParseOrUndefined<TokenPayload>(
+      decodedPayloadJson,
+    );
     return decodedPayload;
   }
 
@@ -261,7 +282,8 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
 
     if (this.tokenValidator) {
       const token = this._rawToken!;
-      if (!this.tokenValidator({ payload: decodedPayload, token })) return false;
+      if (!this.tokenValidator({ payload: decodedPayload, token }))
+        return false;
     }
 
     const exp = decodedPayload.exp;
@@ -306,7 +328,8 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
    */
   handleRedirect() {
     const locationHref = window.location.href;
-    if (!locationHref.startsWith(this.redirectUri)) return 'REDIRECT_URI_MISMATCH';
+    if (!locationHref.startsWith(this.redirectUri))
+      return 'REDIRECT_URI_MISMATCH';
 
     const rawHash = window.location.hash;
     if (!rawHash) return 'FALSY_HASH';
@@ -349,7 +372,8 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
       const dispatch =
         typeof listener === 'function'
           ? listener
-          : typeof listener === 'object' && typeof listener.handleEvent === 'function'
+          : typeof listener === 'object' &&
+            typeof listener.handleEvent === 'function'
           ? listener.handleEvent.bind(listener)
           : () => {};
 
@@ -361,9 +385,12 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
   /**
    * Removes the event listener in target's event listener list with the same type, callback, and options.
    */
-  removeEventListener(type: string, listener: EventListenerOrEventListenerObject) {
+  removeEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+  ) {
     const listeners = this._eventListeners[type] || [];
-    this._eventListeners[type] = listeners.filter(l => l !== listener);
+    this._eventListeners[type] = listeners.filter((l) => l !== listener);
   }
 
   /**
@@ -434,7 +461,8 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
   async tokenPayload() {
     await this.authenticated();
     const payload = this._rawTokenPayload;
-    if (!payload) throw new Error('Token payload was falsy after being authenticated.');
+    if (!payload)
+      throw new Error('Token payload was falsy after being authenticated.');
     return payload;
   }
 
@@ -453,7 +481,9 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
    * wraps `setTimeout` in a `Promise` that resolves to `'TIMER'`
    */
   static time(milliseconds: number) {
-    return new Promise<'TIMER'>(resolve => window.setTimeout(() => resolve('TIMER'), milliseconds));
+    return new Promise<'TIMER'>((resolve) =>
+      window.setTimeout(() => resolve('TIMER'), milliseconds),
+    );
   }
 
   /**
@@ -462,7 +492,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
   static decodeUri(str: string) {
     try {
       return decodeURIComponent(str);
-    } catch (e) {
+    } catch {
       return str;
     }
   }
@@ -474,8 +504,11 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
    */
   static encodeObjectToUri(obj: { [key: string]: string }) {
     return Object.keys(obj)
-      .map(key => ({ key, value: obj[key] }))
-      .map(({ key, value }) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .map((key) => ({ key, value: obj[key] }))
+      .map(
+        ({ key, value }) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
+      )
       .join('&');
   }
 
@@ -485,15 +518,12 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }> implements Ev
    * `one=two&buckle=shoes%20or%20something` ==> `{one: 'two', buckle: 'shoes or something'}`
    */
   static decodeUriToObject(str: string) {
-    return str.split('&').reduce(
-      (decoded, keyValuePair) => {
-        const [keyEncoded, valueEncoded] = keyValuePair.split('=');
-        const key = this.decodeUri(keyEncoded);
-        const value = this.decodeUri(valueEncoded);
-        decoded[key] = value;
-        return decoded;
-      },
-      {} as { [key: string]: string | undefined },
-    );
+    return str.split('&').reduce((decoded, keyValuePair) => {
+      const [keyEncoded, valueEncoded] = keyValuePair.split('=');
+      const key = this.decodeUri(keyEncoded);
+      const value = this.decodeUri(valueEncoded);
+      decoded[key] = value;
+      return decoded;
+    }, {} as { [key: string]: string | undefined });
   }
 }
