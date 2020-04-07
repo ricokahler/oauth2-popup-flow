@@ -13,7 +13,7 @@ module.exports = [
       name: 'OAuth2PopupFlow',
       sourcemap: true,
     },
-    plugins: [typescript({ exclude, tsconfig: false, ...rest })],
+    plugins: [typescript({ ...rest, exclude, tsconfig: false })],
   },
   {
     input: './src/index.ts',
@@ -22,6 +22,14 @@ module.exports = [
       format: 'esm',
       sourcemap: true,
     },
-    plugins: [typescript({ exclude, tsconfig: false, ...rest })],
+    plugins: [
+      typescript({
+        ...rest,
+        exclude,
+        tsconfig: false,
+        target: 'es2015',
+        module: 'es2015',
+      }),
+    ],
   },
 ];

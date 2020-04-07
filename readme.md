@@ -122,7 +122,7 @@ auth.addEventListener('logout', () => {
 });
 ```
 
-[Check out the API docs for more info](https://ricokahler.github.io/oauth2-popup-flow/interfaces/_index_.oauth2popupflowoptions.html)
+[Check out the API docs for more info](https://oauth2-popup-flow.netlify.com/)
 
 ### Examples (work-in-progress, contributions welcome)
 

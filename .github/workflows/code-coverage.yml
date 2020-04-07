@@ -1,6 +1,6 @@
-name: Run Tests
+name: Code Coverage
 on:
-  - pull_request
+  - push
 
 jobs:
   test:
@@ -13,4 +13,6 @@ jobs:
       - name: npm install
         run: npm i
       - name: npm test
-        run: npm t
+        run: npm t -- --coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1

@@ -7,7 +7,7 @@
   "sideEffects": false,
   "scripts": {
     "test": "jest",
-    "build": "rm -rf dist && tsc && rollup -c && cp package.json ./dist",
+    "build": "rm -rf dist && tsc && rollup -c && cp package.json ./dist && cp readme.md ./dist",
     "docs": "rm -rf docs && typedoc --out ./docs ./src/index.ts"
   },
   "author": "Rico Kahler",
