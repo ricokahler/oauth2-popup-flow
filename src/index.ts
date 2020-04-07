@@ -527,3 +527,5 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
     }, {} as { [key: string]: string | undefined });
   }
 }
+
+export default OAuth2PopupFlow;
