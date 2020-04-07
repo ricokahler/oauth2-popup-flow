@@ -23,7 +23,7 @@
                                                                           |_|    |_|\___/ \_/\_/
 ```
 
-[![Build Status](https://travis-ci.org/ricokahler/oauth2-popup-flow.svg?branch=master)](https://travis-ci.org/ricokahler/oauth2-popup-flow) [![Coverage Status](https://coveralls.io/repos/github/ricokahler/oauth2-popup-flow/badge.svg?branch=master)](https://coveralls.io/github/ricokahler/oauth2-popup-flow?branch=master)
+[![codecov](https://codecov.io/gh/ricokahler/oauth2-popup-flow/branch/master/graph/badge.svg)](https://codecov.io/gh/ricokahler/oauth2-popup-flow)
 
 ### A very simple oauth2 implicit grant flow library<br>with no dependencies that uses `window.open`.
 
