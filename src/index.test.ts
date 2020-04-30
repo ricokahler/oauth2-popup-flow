@@ -1,4 +1,5 @@
 import { OAuth2PopupFlow } from './';
+import { encodeObjectToUri, time } from './helpers';
 
 interface ExampleTokenPayload {
   exp: number;
@@ -28,72 +29,6 @@ function createTestStorage() {
 }
 
 describe('OAuth2PopupFlow', () => {
-  describe('jsonParseOrUndefined', () => {
-    it('returns parsed JSON when valid', () => {
-      const validJson = '{"a": "some value", "b": 5}';
-      const parsed = OAuth2PopupFlow.jsonParseOrUndefined<{
-        a: string;
-        b: number;
-      }>(validJson)!;
-      expect(parsed).toBeDefined();
-      expect(parsed.a).toBe('some value');
-      expect(parsed.b).toBe(5);
-    });
-    it('returns undefined when the JSON is invalid', () => {
-      const invalidJson = 'this aint json';
-      const parsed = OAuth2PopupFlow.jsonParseOrUndefined(invalidJson);
-      expect(parsed).toBeUndefined();
-    });
-  });
-
-  describe('time', () => {
-    it('calls `setTimeout` and returns `TIMER`', async () => {
-      function fiveMilliseconds() {
-        return new Promise<5>((resolve) => setTimeout(() => resolve(5), 5));
-      }
-
-      const race = await Promise.race([
-        OAuth2PopupFlow.time(10),
-        fiveMilliseconds(),
-      ]);
-      expect(race).toBe(5);
-
-      const otherRace = await Promise.race([
-        OAuth2PopupFlow.time(0),
-        fiveMilliseconds(),
-      ]);
-      expect(otherRace).toBe('TIMER');
-    });
-  });
-
-  describe('decodeUri', () => {
-    it('calls `decodeURIComponent` and returns its result', () => {
-      const result = OAuth2PopupFlow.decodeUri('hello%20world');
-      expect(result).toBe('hello world');
-    });
-    it('catches `decodeURIComponent` and returns the original string', () => {
-      const notParsable = '%';
-      const result = OAuth2PopupFlow.decodeUri(notParsable);
-      expect(result).toBe(notParsable);
-    });
-  });
-
-  describe('encodeObjectToUri', () => {
-    it('encodes plain ole javascript objects of strings to a URI component', () => {
-      const javascriptObject = { foo: 'some value', bar: 'some other value' };
-      const encoded = OAuth2PopupFlow.encodeObjectToUri(javascriptObject);
-      expect(encoded).toBe('foo=some%20value&bar=some%20other%20value');
-    });
-  });
-
-  describe('decodeUriToObject', () => {
-    it('decodes a URI into an object of strings', () => {
-      const uri = 'foo=some%20value&bar=some%20other%20value';
-      const decoded = OAuth2PopupFlow.decodeUriToObject(uri);
-      expect(decoded).toEqual({ foo: 'some value', bar: 'some other value' });
-    });
-  });
-
   describe('constructor', () => {
     it('creates instances from the `OAuth2PopupFlowOptions` object', () => {
       function beforePopup() {}
@@ -121,7 +56,7 @@ describe('OAuth2PopupFlow', () => {
         afterResponse,
       };
 
-      const auth = new OAuth2PopupFlow(options);
+      const auth = OAuth2PopupFlow(options);
 
       expect(auth.accessTokenResponseKey).toBe(options.accessTokenResponseKey);
       expect(auth.accessTokenStorageKey).toBe(options.accessTokenStorageKey);
@@ -147,7 +82,7 @@ describe('OAuth2PopupFlow', () => {
         scope: 'test scope',
       };
 
-      const auth = new OAuth2PopupFlow(options);
+      const auth = OAuth2PopupFlow(options);
 
       expect(auth.responseType).toBe('token');
     });
@@ -159,7 +94,7 @@ describe('OAuth2PopupFlow', () => {
         scope: 'test scope',
       };
 
-      const auth = new OAuth2PopupFlow(options);
+      const auth = OAuth2PopupFlow(options);
 
       expect(auth.accessTokenStorageKey).toBe('token');
     });
@@ -171,7 +106,7 @@ describe('OAuth2PopupFlow', () => {
         scope: 'test scope',
       };
 
-      const auth = new OAuth2PopupFlow(options);
+      const auth = OAuth2PopupFlow(options);
 
       expect(auth.accessTokenResponseKey).toBe('access_token');
     });
@@ -183,7 +118,7 @@ describe('OAuth2PopupFlow', () => {
         scope: 'test scope',
       };
 
-      const auth = new OAuth2PopupFlow(options);
+      const auth = OAuth2PopupFlow(options);
 
       expect(auth.storage).toBe(window.localStorage);
     });
@@ -196,17 +131,17 @@ describe('OAuth2PopupFlow', () => {
         scope: 'test scope',
       };
 
-      const auth = new OAuth2PopupFlow(options);
+      const auth = OAuth2PopupFlow(options);
 
       expect(auth.pollingTime).toBe(200);
     });
   });
 
-  describe('_rawToken', () => {
+  describe('_getRawToken/_setRawToken', () => {
     it('gets the raw token from storage', () => {
       const storage = createTestStorage();
 
-      const auth = new OAuth2PopupFlow({
+      const auth = OAuth2PopupFlow({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -216,12 +151,13 @@ describe('OAuth2PopupFlow', () => {
 
       storage._storage.token = 'test_token';
 
-      expect(auth['_rawToken']).toBe('test_token');
+      // @ts-ignore
+      expect(auth._getRawToken()).toBe('test_token');
     });
     it('returns `undefined` if the value in storage is falsy', () => {
       const storage = createTestStorage();
 
-      const auth = new OAuth2PopupFlow({
+      const auth = OAuth2PopupFlow({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -230,15 +166,17 @@ describe('OAuth2PopupFlow', () => {
       });
 
       storage._storage.token = '';
-      expect(auth['_rawToken']).toBeUndefined();
+      // @ts-ignore
+      expect(auth._getRawToken()).toBeUndefined();
 
       storage._storage.token = null;
-      expect(auth['_rawToken']).toBeUndefined();
+      // @ts-ignore
+      expect(auth._getRawToken()).toBeUndefined();
     });
     it("doesn't allow `null` or `undefined` to be assigned to storage but allows strings", () => {
       const storage = createTestStorage();
 
-      const auth = new OAuth2PopupFlow({
+      const auth = OAuth2PopupFlow({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -248,25 +186,29 @@ describe('OAuth2PopupFlow', () => {
 
       storage._storage.token = 'initial value';
 
-      auth['_rawToken'] = undefined;
+      // @ts-ignore
+      auth._setRawToken(undefined);
       expect(storage._storage.token).toBe('initial value');
 
-      (auth as any)['_rawToken'] = null;
+      // @ts-ignore
+      auth._setRawToken(null);
       expect(storage._storage.token).toBe('initial value');
+      // @ts-ignore
 
-      auth['_rawToken'] = '';
+      auth._setRawToken('');
       expect(storage._storage.token).toBe('');
 
-      auth['_rawToken'] = 'something';
+      // @ts-ignore
+      auth._setRawToken('something');
       expect(storage._storage.token).toBe('something');
     });
   });
 
-  describe('_rawTokenPayload', () => {
-    it('returns `undefined` if the `_rawToken` is falsy', () => {
+  describe('_getRawTokenPayload', () => {
+    it('returns `undefined` if the `_getRawToken()` is falsy', () => {
       const storage = createTestStorage();
 
-      const auth = new OAuth2PopupFlow({
+      const auth = OAuth2PopupFlow({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -275,18 +217,21 @@ describe('OAuth2PopupFlow', () => {
       });
 
       storage._storage.token = undefined;
-      expect(auth['_rawTokenPayload']).toBeUndefined();
+      // @ts-ignore
+      expect(auth._getRawTokenPayload()).toBeUndefined();
 
       storage._storage.token = null;
-      expect(auth['_rawTokenPayload']).toBeUndefined();
+      // @ts-ignore
+      expect(auth._getRawTokenPayload()).toBeUndefined();
 
       storage._storage.token = '';
-      expect(auth['_rawTokenPayload']).toBeUndefined();
+      // @ts-ignore
+      expect(auth._getRawTokenPayload()).toBeUndefined();
     });
     it("returns `undefined` if it couldn't find the encoded payload in the token", () => {
       const storage = createTestStorage();
 
-      const auth = new OAuth2PopupFlow({
+      const auth = OAuth2PopupFlow({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -295,12 +240,13 @@ describe('OAuth2PopupFlow', () => {
       });
 
       storage._storage.token = 'non-proper JWT';
-      expect(auth['_rawTokenPayload']).toBeUndefined();
+      // @ts-ignore
+      expect(auth._getRawTokenPayload()).toBeUndefined();
     });
     it("returns `undefined` if it couldn't parse the JSON in the encoded payload", () => {
       const storage = createTestStorage();
 
-      const auth = new OAuth2PopupFlow({
+      const auth = OAuth2PopupFlow({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -314,12 +260,13 @@ describe('OAuth2PopupFlow', () => {
         'this is the signature section',
       ].join('.');
 
-      expect(auth['_rawTokenPayload']).toBeUndefined();
+      // @ts-ignore
+      expect(auth._getRawTokenPayload()).toBeUndefined();
     });
     it('returns a proper decoded payload', () => {
       const storage = createTestStorage();
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -339,15 +286,16 @@ describe('OAuth2PopupFlow', () => {
         'this is the signature section',
       ].join('.');
 
-      expect(auth['_rawTokenPayload']).toEqual(examplePayload);
+      // @ts-ignore
+      expect(auth._getRawTokenPayload()).toEqual(examplePayload);
     });
   });
 
   describe('loggedIn', () => {
-    it('returns `false` if the `_rawTokenPayload` is undefined', () => {
+    it('returns `false` if the `_getRawTokenPayload()` is undefined', () => {
       const storage = createTestStorage();
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -375,7 +323,7 @@ describe('OAuth2PopupFlow', () => {
 
       let tokenValidatorCalled = false;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -408,7 +356,7 @@ describe('OAuth2PopupFlow', () => {
 
       let tokenValidatorCalled = false;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -439,7 +387,7 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
       storage._storage.token = exampleToken;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -463,7 +411,7 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
       storage._storage.token = exampleToken;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -487,7 +435,7 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
       storage._storage.token = exampleToken;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -500,10 +448,10 @@ describe('OAuth2PopupFlow', () => {
   });
 
   describe('tokenExpired', () => {
-    it('returns `false` if the `_rawTokenPayload` is undefined', () => {
+    it('returns `false` if the `_getRawTokenPayload()` is undefined', () => {
       const storage = createTestStorage();
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -529,7 +477,7 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
       storage._storage.token = exampleToken;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -553,7 +501,7 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
       storage._storage.token = exampleToken;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -577,7 +525,7 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
       storage._storage.token = exampleToken;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -604,7 +552,7 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
       storage._storage.token = exampleToken;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -631,7 +579,7 @@ describe('OAuth2PopupFlow', () => {
       ].join('.');
       storage._storage.token = exampleToken;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>({
         authorizationUri: 'http://example.com/oauth/authorize',
         clientId: 'some_test_client',
         redirectUri: 'http://localhost:8080/redirect',
@@ -660,7 +608,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       window.location.hash = 'something%20else';
 
@@ -678,7 +626,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       window.location.hash = '';
 
@@ -697,7 +645,7 @@ describe('OAuth2PopupFlow', () => {
     //     storage,
     //   };
 
-    //   const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+    //   const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
     //   window.location.hash = 'shouldn\t match';
 
     //   const result = auth.handleRedirect();
@@ -726,10 +674,8 @@ describe('OAuth2PopupFlow', () => {
         },
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-      window.location.hash = `#${OAuth2PopupFlow.encodeObjectToUri(
-        objectToEncode,
-      )}`;
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
+      window.location.hash = `#${encodeObjectToUri(objectToEncode)}`;
 
       const result = auth.handleRedirect();
       expect(result).toBe('SUCCESS');
@@ -746,15 +692,15 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-      window.location.hash = `#${OAuth2PopupFlow.encodeObjectToUri({
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
+      window.location.hash = `#${encodeObjectToUri({
         access_token: '',
       })}`;
 
       const result = auth.handleRedirect();
       expect(result).toBe('FALSY_TOKEN');
     });
-    it('returns `SUCCESS` setting the `_rawToken` and clearing the hash if token is valid', () => {
+    it('returns `SUCCESS` setting via `_setRawToken` and clearing the hash if token is valid', () => {
       const storage = createTestStorage();
 
       const options = {
@@ -765,11 +711,11 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      window.location.hash = `#${OAuth2PopupFlow.encodeObjectToUri({
+      window.location.hash = `#${encodeObjectToUri({
         access_token: 'some token thing',
       })}`;
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       const result = auth.handleRedirect();
       expect(result).toBe('SUCCESS');
@@ -801,7 +747,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       expect(auth.loggedIn()).toBe(true);
       expect(await auth.tryLoginPopup()).toBe('ALREADY_LOGGED_IN');
@@ -819,7 +765,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       expect(auth.loggedIn()).toBe(false);
       expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
@@ -842,7 +788,7 @@ describe('OAuth2PopupFlow', () => {
         },
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       expect(auth.loggedIn()).toBe(false);
       expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
@@ -862,12 +808,12 @@ describe('OAuth2PopupFlow', () => {
         scope: 'openid profile',
         storage,
         beforePopup: async () => {
-          expect(await OAuth2PopupFlow.time(0)).toBe('TIMER');
+          expect(await time(0)).toBe('TIMER');
           beforePopupCalled = true;
         },
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       expect(auth.loggedIn()).toBe(false);
       expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
@@ -895,7 +841,7 @@ describe('OAuth2PopupFlow', () => {
         },
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
       expect(openCalled).toBe(true);
@@ -918,7 +864,7 @@ describe('OAuth2PopupFlow', () => {
         additionalAuthorizationParameters: { foo: 'bar' },
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       expect(await auth.tryLoginPopup()).toBe('POPUP_FAILED');
       expect(openCalled).toBe(true);
@@ -955,9 +901,9 @@ describe('OAuth2PopupFlow', () => {
         'this is the signature section',
       ].join('.');
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
       auth.addEventListener('login', resolve);
-      OAuth2PopupFlow.time(0).then(() => {
+      time(0).then(() => {
         storage._storage.token = exampleToken;
       });
 
@@ -991,8 +937,8 @@ describe('OAuth2PopupFlow', () => {
         'this is the signature section',
       ].join('.');
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-      OAuth2PopupFlow.time(10).then(() => {
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
+      time(10).then(() => {
         storage._storage.token = exampleToken;
       });
 
@@ -1003,7 +949,7 @@ describe('OAuth2PopupFlow', () => {
   });
 
   describe('token', () => {
-    it('returns the `_rawToken` if `loggedIn()`', async () => {
+    it('returns the `_getRawToken()` if `loggedIn()`', async () => {
       const storage = createTestStorage();
 
       const options = {
@@ -1014,7 +960,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       const examplePayload = {
         foo: 'something',
@@ -1033,37 +979,10 @@ describe('OAuth2PopupFlow', () => {
 
       expect(token).toEqual(exampleToken);
     });
-    it('throws if `_rawToken` was falsy after being authenticated', async () => {
-      const storage = createTestStorage();
-
-      const options = {
-        authorizationUri: 'http://example.com/oauth/authorize',
-        clientId: 'some_test_client',
-        redirectUri: '',
-        scope: 'openid profile',
-        storage,
-      };
-
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-
-      expect(auth.loggedIn()).toBe(false);
-      spyOn(auth, 'authenticated');
-
-      let catchCalled = false;
-
-      try {
-        await auth.token();
-      } catch (e) {
-        expect(e.message).toBe('Token was falsy after being authenticated.');
-        catchCalled = true;
-      } finally {
-        expect(catchCalled).toBe(true);
-      }
-    });
   });
 
   describe('tokenPayload', () => {
-    it('returns the `_rawToken` if `loggedIn()`', async () => {
+    it('returns the `_getRawToken` if `loggedIn()`', async () => {
       const storage = createTestStorage();
 
       const options = {
@@ -1074,7 +993,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
 
       const examplePayload = {
         foo: 'something',
@@ -1093,35 +1012,6 @@ describe('OAuth2PopupFlow', () => {
 
       expect(payload).toEqual(examplePayload);
     });
-    it('throws if `_rawToken` was falsy after being authenticated', async () => {
-      const storage = createTestStorage();
-
-      const options = {
-        authorizationUri: 'http://example.com/oauth/authorize',
-        clientId: 'some_test_client',
-        redirectUri: '',
-        scope: 'openid profile',
-        storage,
-      };
-
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
-
-      expect(auth.loggedIn()).toBe(false);
-      spyOn(auth, 'authenticated');
-
-      let catchCalled = false;
-
-      try {
-        await auth.tokenPayload();
-      } catch (e) {
-        expect(e.message).toBe(
-          'Token payload was falsy after being authenticated.',
-        );
-        catchCalled = true;
-      } finally {
-        expect(catchCalled).toBe(true);
-      }
-    });
   });
 
   describe('EventTarget', () => {
@@ -1138,7 +1028,7 @@ describe('OAuth2PopupFlow', () => {
 
       const handler = jest.fn();
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
       auth.addEventListener('login', handler);
       auth.dispatchEvent(new Event('login'));
       auth.dispatchEvent(new Event('login'));
@@ -1159,7 +1049,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
       auth.addEventListener('login', handler);
       auth.dispatchEvent(new Event('login'));
       auth.dispatchEvent(new Event('login'));
@@ -1182,7 +1072,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
       auth.removeEventListener('login', () => {});
     });
 
@@ -1197,7 +1087,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
       const handler = jest.fn();
 
       const eventListenerObject = {
@@ -1223,7 +1113,7 @@ describe('OAuth2PopupFlow', () => {
         storage,
       };
 
-      const auth = new OAuth2PopupFlow<ExampleTokenPayload>(options);
+      const auth = OAuth2PopupFlow<ExampleTokenPayload>(options);
       const handler = jest.fn();
 
       const notRealObj = {};

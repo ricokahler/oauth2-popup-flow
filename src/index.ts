@@ -1,3 +1,12 @@
+import {
+  jsonParseOrUndefined,
+  decodeUriToObject,
+  encodeObjectToUri,
+  time,
+} from './helpers';
+
+declare const process: any;
+
 /**
  * The type of the configuration object used to create a `OAuth2PopupFlow`
  *
@@ -112,7 +121,7 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
    * be passed along with every call to the `authorizationUri`. You can do that like so:
    *
    * ```ts
-   * const auth = new OAuth2PopupFlow({
+   * const auth = OAuth2PopupFlow({
    *   authorizationUri: 'https://example.com/oauth/authorize',
    *   clientId: 'foo_client',
    *   redirectUri: 'http://localhost:8080/redirect',
@@ -150,7 +159,7 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
    * [For example: validating the `nonce`:][0]
    *
    * ```ts
-   * const auth = new OAuth2PopupFlow({
+   * const auth = OAuth2PopupFlow({
    *   authorizationUri: 'https://example.com/oauth/authorize',
    *   clientId: 'foo_client',
    *   redirectUri: 'http://localhost:8080/redirect',
@@ -200,63 +209,30 @@ export interface OAuth2PopupFlowOptions<TokenPayload extends { exp: number }> {
   }) => void;
 }
 
-export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
-  implements EventTarget {
-  authorizationUri: string;
-  clientId: string;
-  redirectUri: string;
-  scope: string;
-  responseType: string;
-  accessTokenStorageKey: string;
-  accessTokenResponseKey: string;
-  storage: Storage;
-  pollingTime: number;
-  additionalAuthorizationParameters?:
-    | (() => { [key: string]: string })
-    | { [key: string]: string };
-  tokenValidator?: (options: {
-    payload: TokenPayload;
-    token: string;
-  }) => boolean;
-  beforePopup?: () => any | Promise<any>;
-  afterResponse?: (authorizationResponse: {
-    [key: string]: string | undefined;
-  }) => void;
-  private _eventListeners: {
+function OAuth2PopupFlow<TokenPayload extends { exp: number }>({
+  responseType = 'token',
+  accessTokenStorageKey = 'token',
+  accessTokenResponseKey = 'access_token',
+  storage = localStorage,
+  pollingTime = 200,
+  ...opts
+}: OAuth2PopupFlowOptions<TokenPayload>) {
+  const eventListeners: {
     [type: string]: EventListenerOrEventListenerObject[];
-  };
+  } = {};
 
-  constructor(options: OAuth2PopupFlowOptions<TokenPayload>) {
-    this.authorizationUri = options.authorizationUri;
-    this.clientId = options.clientId;
-    this.redirectUri = options.redirectUri;
-    this.scope = options.scope;
-    this.responseType = options.responseType || 'token';
-    this.accessTokenStorageKey = options.accessTokenStorageKey || 'token';
-    this.accessTokenResponseKey =
-      options.accessTokenResponseKey || 'access_token';
-    this.storage = options.storage || window.localStorage;
-    this.pollingTime = options.pollingTime || 200;
-    this.additionalAuthorizationParameters =
-      options.additionalAuthorizationParameters;
-    this.tokenValidator = options.tokenValidator;
-    this.beforePopup = options.beforePopup;
-    this.afterResponse = options.afterResponse;
-    this._eventListeners = {};
+  function _getRawToken() {
+    return storage.getItem(accessTokenStorageKey) || undefined;
   }
-
-  private get _rawToken() {
-    return this.storage.getItem(this.accessTokenStorageKey) || undefined;
-  }
-  private set _rawToken(value: string | undefined) {
+  function _setRawToken(value: string | undefined) {
     if (value === null) return;
     if (value === undefined) return;
 
-    this.storage.setItem(this.accessTokenStorageKey, value);
+    storage.setItem(accessTokenStorageKey, value);
   }
 
-  private get _rawTokenPayload() {
-    const rawToken = this._rawToken;
+  function _getRawTokenPayload() {
+    const rawToken = _getRawToken();
     if (!rawToken) return undefined;
 
     const tokenSplit = rawToken.split('.');
@@ -266,7 +242,7 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
     const decodedPayloadJson = window.atob(
       encodedPayload.replace('-', '+').replace('_', '/'),
     );
-    const decodedPayload = OAuth2PopupFlow.jsonParseOrUndefined<TokenPayload>(
+    const decodedPayload = jsonParseOrUndefined<TokenPayload>(
       decodedPayloadJson,
     );
     return decodedPayload;
@@ -276,13 +252,13 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
    * A simple synchronous method that returns whether or not the user is logged in by checking
    * whether or not their token is present and not expired.
    */
-  loggedIn() {
-    const decodedPayload = this._rawTokenPayload;
+  function loggedIn() {
+    const decodedPayload = _getRawTokenPayload();
     if (!decodedPayload) return false;
 
-    if (this.tokenValidator) {
-      const token = this._rawToken!;
-      if (!this.tokenValidator({ payload: decodedPayload, token }))
+    if (opts.tokenValidator) {
+      const token = _getRawToken()!;
+      if (!opts.tokenValidator({ payload: decodedPayload, token }))
         return false;
     }
 
@@ -298,8 +274,8 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
    * in conjunction with `loggedIn` to display a message like "you need to *re*login" vs "you need
    * to login".
    */
-  tokenExpired() {
-    const decodedPayload = this._rawTokenPayload;
+  function tokenExpired() {
+    const decodedPayload = _getRawTokenPayload();
     if (!decodedPayload) return false;
 
     const exp = decodedPayload.exp;
@@ -314,9 +290,9 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
    * Deletes the token from the given storage causing `loggedIn` to return false on its next call.
    * Also dispatches `logout` event
    */
-  logout() {
-    this.storage.removeItem(this.accessTokenStorageKey);
-    this.dispatchEvent(new Event('logout'));
+  function logout() {
+    storage.removeItem(accessTokenStorageKey);
+    dispatchEvent(new Event('logout'));
   }
 
   /**
@@ -326,27 +302,25 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
    * If the method was able to grab the token, it will return `'SUCCESS'` else it will return a
    * different string.
    */
-  handleRedirect() {
+  function handleRedirect() {
     const locationHref = window.location.href;
-    if (!locationHref.startsWith(this.redirectUri))
+    if (!locationHref.startsWith(opts.redirectUri))
       return 'REDIRECT_URI_MISMATCH';
 
     const rawHash = window.location.hash;
     if (!rawHash) return 'FALSY_HASH';
-    const hashMatch = /#(.*)/.exec(rawHash);
-
-    // this case won't happen because the browser typically adds the `#` always
-    if (!hashMatch) return 'NO_HASH_MATCH';
+    // this will always match
+    const hashMatch = /#(.*)/.exec(rawHash)!;
     const hash = hashMatch[1];
 
-    const authorizationResponse = OAuth2PopupFlow.decodeUriToObject(hash);
-    if (this.afterResponse) {
-      this.afterResponse(authorizationResponse);
+    const authorizationResponse = decodeUriToObject(hash);
+    if (opts.afterResponse) {
+      opts.afterResponse(authorizationResponse);
     }
-    const rawToken = authorizationResponse[this.accessTokenResponseKey];
+    const rawToken = authorizationResponse[accessTokenResponseKey];
     if (!rawToken) return 'FALSY_TOKEN';
 
-    this._rawToken = rawToken;
+    _setRawToken(rawToken);
     window.location.hash = '';
     return 'SUCCESS';
   }
@@ -357,17 +331,20 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
    * 1. `logout`–fired when the `logout()` method is called and
    * 2. `login`–fired during the `tryLoginPopup()` method is called and succeeds
    */
-  addEventListener(type: string, listener: EventListenerOrEventListenerObject) {
-    const listeners = this._eventListeners[type] || [];
+  function addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+  ) {
+    const listeners = eventListeners[type] || [];
     listeners.push(listener);
-    this._eventListeners[type] = listeners;
+    eventListeners[type] = listeners;
   }
 
   /**
    * Use this to dispatch an event to the internal `EventTarget`
    */
-  dispatchEvent(event: Event) {
-    const listeners = this._eventListeners[event.type] || [];
+  function dispatchEvent(event: Event) {
+    const listeners = eventListeners[event.type] || [];
     for (const listener of listeners) {
       const dispatch =
         typeof listener === 'function'
@@ -385,12 +362,12 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
   /**
    * Removes the event listener in target's event listener list with the same type, callback, and options.
    */
-  removeEventListener(
+  function removeEventListener(
     type: string,
     listener: EventListenerOrEventListenerObject,
   ) {
-    const listeners = this._eventListeners[type] || [];
-    this._eventListeners[type] = listeners.filter((l) => l !== listener);
+    const listeners = eventListeners[type] || [];
+    eventListeners[type] = listeners.filter((l) => l !== listener);
   }
 
   /**
@@ -401,34 +378,34 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
    *
    * Also dispatches `login` event
    */
-  async tryLoginPopup() {
-    if (this.loggedIn()) return 'ALREADY_LOGGED_IN';
+  async function tryLoginPopup() {
+    if (loggedIn()) return 'ALREADY_LOGGED_IN';
 
-    if (this.beforePopup) {
-      await Promise.resolve(this.beforePopup());
+    if (opts.beforePopup) {
+      await Promise.resolve(opts.beforePopup());
     }
 
     const additionalParams =
-      typeof this.additionalAuthorizationParameters === 'function'
-        ? this.additionalAuthorizationParameters()
-        : typeof this.additionalAuthorizationParameters === 'object'
-        ? this.additionalAuthorizationParameters
+      typeof opts.additionalAuthorizationParameters === 'function'
+        ? opts.additionalAuthorizationParameters()
+        : typeof opts.additionalAuthorizationParameters === 'object'
+        ? opts.additionalAuthorizationParameters
         : {};
 
     const popup = window.open(
-      `${this.authorizationUri}?${OAuth2PopupFlow.encodeObjectToUri({
-        client_id: this.clientId,
-        response_type: this.responseType,
-        redirect_uri: this.redirectUri,
-        scope: this.scope,
+      `${opts.authorizationUri}?${encodeObjectToUri({
+        client_id: opts.clientId,
+        response_type: responseType,
+        redirect_uri: opts.redirectUri,
+        scope: opts.scope,
         ...additionalParams,
       })}`,
     );
     if (!popup) return 'POPUP_FAILED';
 
-    await this.authenticated();
+    await authenticated();
     popup.close();
-    this.dispatchEvent(new Event('login'));
+    dispatchEvent(new Event('login'));
 
     return 'SUCCESS';
   }
@@ -437,9 +414,9 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
    * A promise that does not resolve until `loggedIn()` is true. This uses the `pollingTime`
    * to wait until checking if `loggedIn()` is `true`.
    */
-  async authenticated() {
-    while (!this.loggedIn()) {
-      await OAuth2PopupFlow.time(this.pollingTime);
+  async function authenticated() {
+    while (!loggedIn()) {
+      await time(pollingTime);
     }
   }
 
@@ -447,85 +424,54 @@ export class OAuth2PopupFlow<TokenPayload extends { exp: number }>
    * If the user is `loggedIn()`, the token will be returned immediate, else it will open a popup
    * and wait until the user is `loggedIn()` (i.e. a new token has been added).
    */
-  async token() {
-    await this.authenticated();
-    const token = this._rawToken;
-    if (!token) throw new Error('Token was falsy after being authenticated.');
-    return token;
+  async function token() {
+    await authenticated();
+    return _getRawToken()!;
   }
 
   /**
    * If the user is `loggedIn()`, the token payload will be returned immediate, else it will open a
    * popup and wait until the user is `loggedIn()` (i.e. a new token has been added).
    */
-  async tokenPayload() {
-    await this.authenticated();
-    const payload = this._rawTokenPayload;
-    if (!payload)
-      throw new Error('Token payload was falsy after being authenticated.');
-    return payload;
+  async function tokenPayload() {
+    await authenticated();
+    return _getRawTokenPayload()!;
   }
 
-  /**
-   * wraps `JSON.parse` and return `undefined` if the parsing failed
-   */
-  static jsonParseOrUndefined<T = {}>(json: string) {
-    try {
-      return JSON.parse(json) as T;
-    } catch (e) {
-      return undefined;
-    }
-  }
-
-  /**
-   * wraps `setTimeout` in a `Promise` that resolves to `'TIMER'`
-   */
-  static time(milliseconds: number) {
-    return new Promise<'TIMER'>((resolve) =>
-      window.setTimeout(() => resolve('TIMER'), milliseconds),
-    );
-  }
-
-  /**
-   * wraps `decodeURIComponent` and returns the original string if it cannot be decoded
-   */
-  static decodeUri(str: string) {
-    try {
-      return decodeURIComponent(str);
-    } catch {
-      return str;
-    }
-  }
-
-  /**
-   * Encodes an object of strings to a URL
-   *
-   * `{one: 'two', buckle: 'shoes or something'}` ==> `one=two&buckle=shoes%20or%20something`
-   */
-  static encodeObjectToUri(obj: { [key: string]: string }) {
-    return Object.keys(obj)
-      .map((key) => ({ key, value: obj[key] }))
-      .map(
-        ({ key, value }) =>
-          `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
-      )
-      .join('&');
-  }
-
-  /**
-   * Decodes a URL string to an object of string
-   *
-   * `one=two&buckle=shoes%20or%20something` ==> `{one: 'two', buckle: 'shoes or something'}`
-   */
-  static decodeUriToObject(str: string) {
-    return str.split('&').reduce((decoded, keyValuePair) => {
-      const [keyEncoded, valueEncoded] = keyValuePair.split('=');
-      const key = this.decodeUri(keyEncoded);
-      const value = this.decodeUri(valueEncoded);
-      decoded[key] = value;
-      return decoded;
-    }, {} as { [key: string]: string | undefined });
-  }
+  return {
+    responseType,
+    accessTokenStorageKey,
+    accessTokenResponseKey,
+    storage,
+    pollingTime,
+    addEventListener,
+    dispatchEvent,
+    removeEventListener,
+    loggedIn,
+    logout,
+    tokenExpired,
+    handleRedirect,
+    tryLoginPopup,
+    authenticated,
+    token,
+    tokenPayload,
+    ...(process.env.NODE_ENV !== 'production' && {
+      _getRawToken,
+      _setRawToken,
+      _getRawTokenPayload,
+    }),
+    ...opts,
+  };
 }
 
-export default OAuth2PopupFlow;
+const FixedTypesOAuth2PopupFlow = OAuth2PopupFlow as <
+  TokenPayload extends { exp: number }
+>(
+  opts: OAuth2PopupFlowOptions<TokenPayload>,
+) => Omit<
+  ReturnType<typeof OAuth2PopupFlow>,
+  '_getRawToken' | '_setRawToken' | '_getRawTokenPayload'
+>;
+
+export { FixedTypesOAuth2PopupFlow as OAuth2PopupFlow };
+export default FixedTypesOAuth2PopupFlow;
