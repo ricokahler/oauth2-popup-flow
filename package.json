@@ -19,7 +19,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.9.0",
     "@babel/preset-typescript": "^7.9.0",
-    "@rollup/plugin-typescript": "^4.0.0",
+    "@rollup/plugin-typescript": "^5.0.1",
     "@types/jest": "^25.1.4",
     "jest": "^25.2.7",
     "jsdom": "^16.2.2",
