@@ -21,7 +21,7 @@
     "@babel/preset-typescript": "^7.9.0",
     "@rollup/plugin-typescript": "^4.0.0",
     "@types/jest": "^26.0.3",
-    "jest": "^25.2.7",
+    "jest": "^26.1.0",
     "jsdom": "^16.2.2",
     "rollup": "^2.3.3",
     "tslib": "^2.0.0",
